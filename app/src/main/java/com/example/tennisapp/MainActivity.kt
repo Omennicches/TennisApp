@@ -65,7 +65,15 @@ fun TennisStartScreen() {
     }
 
     if (matchStarted) {
-        MatchScreen(playerA = playerA, playerB = playerB, onBack = { matchStarted = false })
+        MatchScreen(
+            playerA = playerA,
+            playerB = playerB,
+            selectedSurface = selectedSurface,
+            setTieBreak = setTieBreak,
+            selectedServer = selectedServer,
+            matchtieBreak = matchtieBreak,
+            onBack = { matchStarted = false }
+        )
     } else {
         // Layout
         Box(modifier = Modifier.fillMaxSize()) {
@@ -160,27 +168,48 @@ fun TennisStartScreen() {
 }
 
 
+
 @Composable
 fun MatchScreen(
     playerA: Player,
     playerB: Player,
+    selectedSurface: String,
+    setTieBreak: Boolean,
+    selectedServer: String,
+    matchtieBreak: Boolean,  // Füge diese Zeile hinzu
     onBack: () -> Unit
 ) {
     // State to control the display of scoring reasons
     var selectedReason by remember { mutableStateOf<String?>(null) }
     var scorer by remember { mutableStateOf<Player?>(null) }
     val backgroundColor = if (playerA.score > playerB.score) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.secondaryContainer
-
+    val server = if (playerA.name == selectedServer) playerA else playerB
+    val receiver = if (server == playerA) playerB else playerA
+    val backgroundImage = when (selectedSurface) {
+        "Sand" -> R.drawable.tennisplatz_clay
+        "Grass" -> R.drawable.tennisplatz_grass
+        "Hartplatz" -> R.drawable.tennisplatz_compund_ace
+        else -> R.drawable.tennisplatz_clay
+    }
     // Layout for the match screen
     Box(modifier = Modifier.fillMaxSize().background(backgroundColor)) {
+
+        // Hintergrundbild
+        Image(
+            painter = painterResource(id = backgroundImage),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.Top,
+            verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+        )
+         {
             // Scoreboard
             Scoreboard(playerA, playerB)
 
@@ -207,7 +236,6 @@ fun MatchScreen(
 
             // Scoring reasons
             scorer?.let { scoringPlayer ->
-                Text("Grund für Punkt:")
                 Row {
                     Button(onClick = { selectedReason = "Ace" }, enabled = scoringPlayer == playerA) {
                         Text("Ass")
@@ -243,6 +271,7 @@ fun MatchScreen(
     }
 }
 
+
 @Composable
 fun Scoreboard(playerA: Player, playerB: Player) {
     Row(
@@ -262,7 +291,7 @@ fun Scoreboard(playerA: Player, playerB: Player) {
     }
 }
 
-//Baut die Selection Buutons
+//Baut die Selection Buttons
 @Composable
 fun SelectionButton(label: String, selected: Boolean, onClick: () -> Unit) {
     val backgroundColor = if (selected) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.secondaryContainer
