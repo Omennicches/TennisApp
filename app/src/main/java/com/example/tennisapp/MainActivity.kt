@@ -37,7 +37,12 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+data class Player(
+    var name: String,
+    var score: Int = 0
+)
 
+//Baut den Screen in dem der Spielstand erfasst wird
 @Composable
 fun TennisStartScreen() {
     // Zustand für die Auswahl
@@ -48,6 +53,10 @@ fun TennisStartScreen() {
     var selectedSurface by remember { mutableStateOf("Sand") }
     var setTieBreak by remember { mutableStateOf(true) }
 
+    // Player Variables
+    var playerA by remember { mutableStateOf(Player("Spieler A")) }
+    var playerB by remember { mutableStateOf(Player("Spieler B")) }
+
     val backgroundImage = when (selectedSurface) {
         "Sand" -> R.drawable.tennisplatz_clay
         "Grass" -> R.drawable.tennisplatz_grass
@@ -55,96 +64,204 @@ fun TennisStartScreen() {
         else -> R.drawable.tennisplatz_clay
     }
 
-    // Layout
-    Box(modifier = Modifier.fillMaxSize()) {
+    if (matchStarted) {
+        MatchScreen(playerA = playerA, playerB = playerB, onBack = { matchStarted = false })
+    } else {
+        // Layout
+        Box(modifier = Modifier.fillMaxSize()) {
 
-        // Hintergrundbild
-        Image(
-            painter = painterResource(id = backgroundImage),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
-        )
+            // Hintergrundbild
+            Image(
+                painter = painterResource(id = backgroundImage),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+
+                // Untergrund
+                Text("Untergrund:", fontSize = 30.sp, fontWeight = FontWeight.Bold)
+                Row {
+                    SelectionButton(label = "Sand", selected = selectedSurface == "Sand") { selectedSurface = "Sand" }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    SelectionButton(label = "Grass", selected = selectedSurface == "Grass") { selectedSurface = "Grass" }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    SelectionButton(label = "Hartplatz", selected = selectedSurface == "Hartplatz") { selectedSurface = "Hartplatz" }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Auswahl der Anzahl der Sätze
+                Text("Anzahl der Sätze:", fontSize = 30.sp, fontWeight = FontWeight.Bold)
+                Row {
+                    SelectionButton(label = "1", selected = selectedSets == 1) { selectedSets = 1 }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    SelectionButton(label = "3", selected = selectedSets == 3) { selectedSets = 3 }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    SelectionButton(label = "5", selected = selectedSets == 5) { selectedSets = 5 }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Auswahl für Match Tie-Break
+                Text("Match Tie Break:", fontSize = 30.sp, fontWeight = FontWeight.Bold)
+                Row {
+                    SelectionButton(label = "Ja", selected = matchtieBreak) { matchtieBreak = true }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    SelectionButton(label = "Nein", selected = !matchtieBreak) { matchtieBreak = false }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                //Auswahl Satz Tie Break
+                Text("Satz Tiebreak:", fontSize = 30.sp, fontWeight = FontWeight.Bold)
+                Row {
+                    SelectionButton(label = "Ja", selected = setTieBreak) { setTieBreak = true }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    SelectionButton(label = "Nein", selected = !setTieBreak) { setTieBreak = false }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Auswahl des Aufschlägers
+                Text("Aufschläger:", fontSize = 30.sp, fontWeight = FontWeight.Bold)
+                Row {
+                    SelectionButton(label = playerA.name, selected = selectedServer == playerA.name) { selectedServer = playerA.name }
+                    Spacer(modifier = Modifier.width(20.dp))
+                    SelectionButton(label = playerB.name, selected = selectedServer == playerB.name) { selectedServer = playerB.name }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Start Match Button
+                Button(
+                    onClick = { matchStarted = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(70.dp)
+                        .clip(CircleShape),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.tertiary,
+                        contentColor = MaterialTheme.colorScheme.onTertiary
+                    )
+                ) {
+                    Text("Match Starten!", fontSize = 35.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+
+@Composable
+fun MatchScreen(
+    playerA: Player,
+    playerB: Player,
+    onBack: () -> Unit
+) {
+    // State to control the display of scoring reasons
+    var selectedReason by remember { mutableStateOf<String?>(null) }
+    var scorer by remember { mutableStateOf<Player?>(null) }
+    val backgroundColor = if (playerA.score > playerB.score) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.secondaryContainer
+
+    // Layout for the match screen
+    Box(modifier = Modifier.fillMaxSize().background(backgroundColor)) {
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.Center,
+            verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Scoreboard
+            Scoreboard(playerA, playerB)
 
-            // Untergrund
-            Text("Untergrund:", fontSize = 30.sp, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Buttons for scoring
             Row {
-                SelectionButton(label = "Sand", selected = selectedSurface == "Sand") { selectedSurface = "Sand" }
-                Spacer(modifier = Modifier.width(16.dp))
-                SelectionButton(label = "Grass", selected = selectedSurface == "Grass") { selectedSurface = "Grass" }
-                Spacer(modifier = Modifier.width(16.dp))
-                SelectionButton(label = "Hartplatz", selected = selectedSurface == "Hartplatz") { selectedSurface = "Hartplatz" }
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Auswahl der Anzahl der Sätze
-            Text("Anzahl der Sätze:", fontSize = 30.sp, fontWeight = FontWeight.Bold)
-            Row {
-                SelectionButton(label = "1", selected = selectedSets == 1) { selectedSets = 1 }
-                Spacer(modifier = Modifier.width(16.dp))
-                SelectionButton(label = "3", selected = selectedSets == 3) { selectedSets = 3 }
-                Spacer(modifier = Modifier.width(16.dp))
-                SelectionButton(label = "5", selected = selectedSets == 5) { selectedSets = 5 }
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Auswahl für Match Tie-Break
-            Text("Match Tie Break:", fontSize = 30.sp, fontWeight = FontWeight.Bold)
-            Row {
-                SelectionButton(label = "Ja", selected = matchtieBreak) { matchtieBreak = true }
-                Spacer(modifier = Modifier.width(16.dp))
-                SelectionButton(label = "Nein", selected = !matchtieBreak) { matchtieBreak = false }
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            //Auswahl Satz Tie Break
-            Text("Satz Tiebreak:", fontSize = 30.sp, fontWeight = FontWeight.Bold)
-            Row {
-                SelectionButton(label = "Ja", selected = setTieBreak) { setTieBreak = true }
-                Spacer(modifier = Modifier.width(16.dp))
-                SelectionButton(label = "Nein", selected = !setTieBreak) { setTieBreak = false }
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Auswahl des Aufschlägers
-            Text("Aufschläger:", fontSize = 30.sp, fontWeight = FontWeight.Bold)
-            Row {
-                SelectionButton(label = "Spieler A", selected = selectedServer == "Spieler A") { selectedServer = "Spieler A" }
+                Button(onClick = {
+                    scorer = playerA
+                    selectedReason = null
+                }) {
+                    Text("Spieler A Punktet")
+                }
                 Spacer(modifier = Modifier.width(20.dp))
-                SelectionButton(label = "Spieler B", selected = selectedServer == "Spieler B") { selectedServer = "Spieler B" }
+                Button(onClick = {
+                    scorer = playerB
+                    selectedReason = null
+                }) {
+                    Text("Spieler B Punktet")
+                }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // Start Match Button
-            Button(
-                onClick = { matchStarted = true },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(70.dp)
-                    .clip(CircleShape),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.tertiary,
-                    contentColor = MaterialTheme.colorScheme.onTertiary
-                )
-            ) {
-                Text("Match Starten!", fontSize = 35.sp, fontWeight = FontWeight.Bold)
+            // Scoring reasons
+            scorer?.let { scoringPlayer ->
+                Text("Grund für Punkt:")
+                Row {
+                    Button(onClick = { selectedReason = "Ace" }, enabled = scoringPlayer == playerA) {
+                        Text("Ass")
+                    }
+                    Button(onClick = { selectedReason = "Aufschlagsfehler" }, enabled = scoringPlayer == playerB) {
+                        Text("Aufschlagsfehler")
+                    }
+                    Button(onClick = { selectedReason = "Netzfehler" }) {
+                        Text("Netzfehler")
+                    }
+                    Button(onClick = { selectedReason = "Aus" }) {
+                        Text("Aus")
+                    }
+                    Button(onClick = { selectedReason = "Doppel-Aufpraller" }) {
+                        Text("Doppel-Aufpraller")
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Confirmation button
+            Button(onClick = {
+                scorer?.let { scoringPlayer ->
+                    scoringPlayer.score++
+                    selectedReason = null
+                    scorer = null
+                }
+            }) {
+                Text("Bestätigen")
             }
         }
     }
 }
+
+@Composable
+fun Scoreboard(playerA: Player, playerB: Player) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(playerA.name, fontWeight = FontWeight.Bold)
+            Text("${playerA.score}")
+        }
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(playerB.name, fontWeight = FontWeight.Bold)
+            Text("${playerB.score}")
+        }
+    }
+}
+
 //Baut die Selection Buutons
 @Composable
 fun SelectionButton(label: String, selected: Boolean, onClick: () -> Unit) {
