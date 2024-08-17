@@ -26,6 +26,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.tennisapp.ui.theme.TennisAppTheme
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,14 +43,17 @@ class MainActivity : ComponentActivity() {
 }
 data class Player(
     var name: String,
-    var score: Int = 0
+    var score: Int = 0,
+    var gamesWon: Int = 0,
+    var setsWon: Int = 0,
+    var tiebreakPoints: Int = 0
 )
 
 //Baut den Screen in dem der Spielstand erfasst wird
 @Composable
 fun TennisStartScreen() {
     // Zustand für die Auswahl
-    var selectedSets by remember { mutableStateOf(1) }
+    var selectedSets by remember { mutableIntStateOf(1) }
     var selectedServer by remember { mutableStateOf("Spieler A") }
     var matchtieBreak by remember { mutableStateOf(true) }
     var matchStarted by remember { mutableStateOf(false) }
@@ -167,130 +174,6 @@ fun TennisStartScreen() {
     }
 }
 
-
-
-@Composable
-fun MatchScreen(
-    playerA: Player,
-    playerB: Player,
-    selectedSurface: String,
-    setTieBreak: Boolean,
-    selectedServer: String,
-    matchtieBreak: Boolean,  // Füge diese Zeile hinzu
-    onBack: () -> Unit
-) {
-    // State to control the display of scoring reasons
-    var selectedReason by remember { mutableStateOf<String?>(null) }
-    var scorer by remember { mutableStateOf<Player?>(null) }
-    val backgroundColor = if (playerA.score > playerB.score) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.secondaryContainer
-    val server = if (playerA.name == selectedServer) playerA else playerB
-    val receiver = if (server == playerA) playerB else playerA
-    val backgroundImage = when (selectedSurface) {
-        "Sand" -> R.drawable.tennisplatz_clay
-        "Grass" -> R.drawable.tennisplatz_grass
-        "Hartplatz" -> R.drawable.tennisplatz_compund_ace
-        else -> R.drawable.tennisplatz_clay
-    }
-    // Layout for the match screen
-    Box(modifier = Modifier.fillMaxSize().background(backgroundColor)) {
-
-        // Hintergrundbild
-        Image(
-            painter = painterResource(id = backgroundImage),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
-        )
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        )
-         {
-            // Scoreboard
-            Scoreboard(playerA, playerB)
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Buttons for scoring
-            Row {
-                Button(onClick = {
-                    scorer = playerA
-                    selectedReason = null
-                }) {
-                    Text("Spieler A Punktet")
-                }
-                Spacer(modifier = Modifier.width(20.dp))
-                Button(onClick = {
-                    scorer = playerB
-                    selectedReason = null
-                }) {
-                    Text("Spieler B Punktet")
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Scoring reasons
-            scorer?.let { scoringPlayer ->
-                Row {
-                    Button(onClick = { selectedReason = "Ace" }, enabled = scoringPlayer == playerA) {
-                        Text("Ass")
-                    }
-                    Button(onClick = { selectedReason = "Aufschlagsfehler" }, enabled = scoringPlayer == playerB) {
-                        Text("Aufschlagsfehler")
-                    }
-                    Button(onClick = { selectedReason = "Netzfehler" }) {
-                        Text("Netzfehler")
-                    }
-                    Button(onClick = { selectedReason = "Aus" }) {
-                        Text("Aus")
-                    }
-                    Button(onClick = { selectedReason = "Doppel-Aufpraller" }) {
-                        Text("Doppel-Aufpraller")
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Confirmation button
-            Button(onClick = {
-                scorer?.let { scoringPlayer ->
-                    scoringPlayer.score++
-                    selectedReason = null
-                    scorer = null
-                }
-            }) {
-                Text("Bestätigen")
-            }
-        }
-    }
-}
-
-
-@Composable
-fun Scoreboard(playerA: Player, playerB: Player) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(playerA.name, fontWeight = FontWeight.Bold)
-            Text("${playerA.score}")
-        }
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(playerB.name, fontWeight = FontWeight.Bold)
-            Text("${playerB.score}")
-        }
-    }
-}
-
 //Baut die Selection Buttons
 @Composable
 fun SelectionButton(label: String, selected: Boolean, onClick: () -> Unit) {
@@ -328,10 +211,593 @@ fun SelectionButton(label: String, selected: Boolean, onClick: () -> Unit) {
     }
 }
 
-@Preview(showBackground = true)
+// MatchScreen composable function
 @Composable
-fun DefaultPreview() {
-    TennisAppTheme {
-        TennisStartScreen()
+fun MatchScreen(
+    playerA: Player,
+    playerB: Player,
+    selectedSurface: String,
+    setTieBreak: Boolean,
+    selectedServer: String,
+    matchtieBreak: Boolean,
+    onBack: () -> Unit
+) {
+    val backgroundColor =
+        if (playerA.score > playerB.score) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.secondaryContainer
+    val server = if (playerA.name == selectedServer) playerA else playerB
+    val receiver = if (server == playerA) playerB else playerA
+    val backgroundImage = when (selectedSurface) {
+        "Sand" -> R.drawable.tennisplatz_clay
+        "Grass" -> R.drawable.tennisplatz_grass
+        "Hartplatz" -> R.drawable.tennisplatz_compund_ace
+        else -> R.drawable.tennisplatz_clay
     }
+
+    // State to control the visibility and selection of buttons
+    var showPointButtons by remember { mutableStateOf(false) }
+    var selectedPlayer by remember { mutableStateOf<Player?>(null) }
+    val selectedPoint = remember { mutableStateOf<String?>(null) }
+    val selectedStroke = remember { mutableStateOf<String?>(null) }
+    val selectedForm = remember { mutableStateOf<String?>(null) }
+
+    // Reset showPointButtons state when selectedPlayer is null
+    LaunchedEffect(selectedPlayer) {
+        if (selectedPlayer == null) {
+            showPointButtons = false
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize().background(backgroundColor)) {
+        // Hintergrundbild
+        Image(
+            painter = painterResource(id = backgroundImage),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+
+        // Back Button
+        IconButton(
+            onClick = { onBack() },
+            modifier = Modifier
+                .padding(16.dp)
+                .align(Alignment.TopStart)
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Zurück",
+                tint = MaterialTheme.colorScheme.onBackground
+            )
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            // Spieler A
+            PlayerScoreCard(player = playerA, isServing = playerA.name == selectedServer)
+
+            // Spieler B
+            PlayerScoreCard(player = playerB, isServing = playerB.name == selectedServer)
+
+            Spacer(modifier = Modifier.height(80.dp))
+
+            // Spieler Punktet Buttons
+            PlayerPointButtons(
+                playerA = playerA,
+                playerB = playerB,
+                selectedPlayer = selectedPlayer,
+                onSelectPlayer = { player ->
+                    // Handle player selection
+                    selectedPlayer = player
+                    showPointButtons = true
+                }
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Punktet Buttons (bedingte Anzeige)
+            if (showPointButtons && selectedPlayer != null) {
+                PointButtons(
+                    selectedPlayer = selectedPlayer,
+                    server = server,
+                    opponent = if (server == playerA) playerB else playerA,
+                    isTiebreak = setTieBreak,
+                    onSelectedPlayerChange = { selectedPlayer = it },
+                    showPointButtons = showPointButtons,  // Pass the state reference
+                    selectedPoint = selectedPoint,  // Pass the state reference
+                    selectedStroke = selectedStroke,  // Pass the state reference
+                    selectedForm = selectedForm  // Pass the state reference
+                )
+            }
+        }
+    }
+}
+
+
+
+@Composable
+fun PlayerScoreCard(player: Player, isServing: Boolean) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .background(MaterialTheme.colorScheme.surface)
+            .clip(CircleShape)
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = player.name,
+            fontSize = 18.sp,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Text(
+            text = player.score.toString(),
+            fontSize = 24.sp,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        if (isServing) {
+            Icon(
+                painter = painterResource(id = R.drawable.tennisball),
+                contentDescription = "Serving",
+                modifier = Modifier.size(24.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+}
+
+@Composable
+fun PlayerPointButtons(
+    playerA: Player,
+    playerB: Player,
+    selectedPlayer: Player?,
+    onSelectPlayer: (Player) -> Unit
+) {
+    // State zur Speicherung des aktuell ausgewählten Buttons
+    val selectedButton = remember { mutableStateOf<Player?>(null) }
+
+    // Funktion zum Aktualisieren der Auswahl
+    val handleButtonClick: (Player) -> Unit = { player ->
+        selectedButton.value = player
+        onSelectPlayer(player)
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp),  // Padding für die ganze Zeile
+        horizontalArrangement = Arrangement.Center
+    ) {
+        listOf(playerA, playerB).forEach { player ->
+            Box(
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .size(120.dp)  // Setze die Größe des Buttons
+                    .background(
+                        color = if (selectedButton.value == player)
+                            MaterialTheme.colorScheme.tertiary
+                        else
+                            MaterialTheme.colorScheme.tertiaryContainer
+                    )
+                    .clickable {
+                        handleButtonClick(player)
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                val density = LocalDensity.current
+                val fontSize = with(density) {
+                    val maxFontSize = 40.sp.toPx()  // Maximum Schriftgröße in Pixel
+                    val minFontSize = 15.sp.toPx()  // Minimum Schriftgröße in Pixel
+                    val textLength = player.name.length
+                    val buttonSize = 80.dp.toPx()
+                    val sizeRatio = buttonSize / textLength
+                    (sizeRatio / 2).coerceIn(minFontSize, maxFontSize).toSp()
+                }
+
+                Text(
+                    text = "${player.name} Punktet",
+                    color = if (selectedButton.value == player)
+                        MaterialTheme.colorScheme.onTertiary
+                    else
+                        MaterialTheme.colorScheme.onTertiaryContainer,
+                    fontSize = fontSize,  // Setze die Schriftgröße automatisch
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 3,  // Erlaube bis zu 3 Zeilen Text
+                    textAlign = TextAlign.Center,
+                    softWrap = true, // Erlaubt Textumbruch ohne Worttrennung
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .padding(horizontal = 4.dp)
+                        .fillMaxSize()
+                        .wrapContentSize(Alignment.Center)
+                )
+            }
+            Spacer(modifier = Modifier.width(20.dp))
+        }
+    }
+
+    // Reset the state when ConfirmButton is pressed
+    LaunchedEffect(selectedPlayer) {
+        if (selectedPlayer == null) {
+            selectedButton.value = null
+        }
+    }
+}
+
+
+@Composable
+fun PointButtons(
+    selectedPlayer: Player?,
+    server: Player,
+    opponent: Player,
+    isTiebreak: Boolean,
+    onSelectedPlayerChange: (Player?) -> Unit,
+    showPointButtons: Boolean,
+    selectedPoint: MutableState<String?>,
+    selectedStroke: MutableState<String?>,
+    selectedForm: MutableState<String?>
+) {
+    // Punkte-Buttons, die angezeigt werden sollen
+    val allPoints = listOf("Ass", "Netz Fehler", "Aus", "Doppel Aufpraller")
+    val regularPoints = listOf("Aufschlagsfehler", "Netz Fehler", "Aus", "Doppel Aufpraller")
+
+    // State zur Speicherung des ausgewählten Punktes
+    // selectedPoint is already provided via parameter
+
+    // Überprüfen, ob der ausgewählte Spieler der Aufschläger ist
+    val pointsToDisplay = if (selectedPlayer == server) {
+        allPoints
+    } else {
+        regularPoints
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp),  // Padding für die ganze Zeile
+        horizontalArrangement = Arrangement.Center
+    ) {
+        pointsToDisplay.forEach { point ->
+            Box(
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .size(80.dp)  // Setze die Größe des Buttons
+                    .background(
+                        color = if (selectedPoint.value == point) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.secondaryContainer
+                    )
+                    .clickable {
+                        selectedPoint.value = point
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                val density = LocalDensity.current
+                val fontSize = with(density) {
+                    // Berechne die Schriftgröße basierend auf der Button-Größe
+                    (80 / point.length).dp.toSp().value.coerceIn(12f, 20f).sp
+                }
+
+                Text(
+                    text = point,
+                    color = if (selectedPoint.value == point) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onSecondaryContainer,
+                    fontSize = fontSize,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 2,  // Erlaube bis zu 2 Zeilen Text
+                    textAlign = TextAlign.Center,
+                    softWrap = true, // Erlaubt Textumbruch ohne Worttrennung
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .padding(horizontal = 4.dp)
+                        .fillMaxSize()
+                        .wrapContentSize(Alignment.Center)
+                )
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+        }
+    }
+
+    // Überprüfen, ob der Bestätigungsbutton angezeigt werden soll
+    if (selectedPoint.value == "Ass" || selectedPoint.value == "Aufschlagsfehler") {
+        ConfirmButton(
+            selectedPlayer,
+            server,
+            opponent,
+            isTiebreak,
+            onSelectedPlayerChange,
+            showPointButtons,
+            selectedPoint,
+            selectedStroke,
+            selectedForm
+        )
+    } else if (selectedPoint.value in listOf("Netz Fehler", "Aus", "Doppel Aufpraller")) {
+        StrokeButtons(
+            onStrokeSelect = { stroke ->
+                // Handle stroke selection
+                println("Selected Stroke: $stroke")
+            },
+            selectedPlayer = selectedPlayer,
+            server = server,
+            opponent = opponent,
+            isTiebreak = isTiebreak,
+            onSelectedPlayerChange = onSelectedPlayerChange,
+            showPointButtons = showPointButtons,
+            selectedPoint = selectedPoint,
+            selectedStroke = selectedStroke,
+            selectedForm = selectedForm
+        )
+    }
+}
+
+
+@Composable
+fun StrokeButtons(
+    onStrokeSelect: (String) -> Unit,
+    selectedPlayer: Player?,
+    server: Player,
+    opponent: Player,
+    isTiebreak: Boolean,
+    onSelectedPlayerChange: (Player?) -> Unit,
+    showPointButtons: Boolean,
+    selectedPoint: MutableState<String?>,
+    selectedStroke: MutableState<String?>,
+    selectedForm: MutableState<String?>
+) {
+    // State für den ausgewählten Stroke innerhalb der StrokeButtons
+    // selectedStroke is already provided via parameter
+
+    val strokeOptions = listOf("Vorhand", "Rückhand")
+
+    // Stroke Buttons Row
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp) // Mehr Abstand zu den Buttons oben
+            .padding(horizontal = 8.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        strokeOptions.forEach { stroke ->
+            Box(
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .size(80.dp)
+                    .background(
+                        color = if (selectedStroke.value == stroke) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.secondaryContainer
+                    )
+                    .clickable {
+                        // Stroke auswählen
+                        selectedStroke.value = stroke
+                        onStrokeSelect(stroke)
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = stroke,
+                    color = if (selectedStroke.value == stroke) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onSecondaryContainer,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+    }
+
+    // Check if FormButtons should be displayed based on the selected stroke
+    if (selectedStroke.value != null) {
+        FormButtons(
+            onFormSelect = { form ->
+                // Handle form selection
+                println("Selected Form: $form")
+            },
+            selectedPlayer = selectedPlayer,
+            server = server,
+            opponent = opponent,
+            isTiebreak = isTiebreak,
+            onSelectedPlayerChange = onSelectedPlayerChange,
+            showPointButtons = showPointButtons,
+            selectedPoint = selectedPoint,
+            selectedStroke = selectedStroke,
+            selectedForm = selectedForm
+        )
+    }
+}
+
+
+@Composable
+fun FormButtons(
+    onFormSelect: (String) -> Unit,
+    selectedPlayer: Player?,
+    server: Player,
+    opponent: Player,
+    isTiebreak: Boolean,
+    onSelectedPlayerChange: (Player?) -> Unit,
+    showPointButtons: Boolean,
+    selectedPoint: MutableState<String?>,
+    selectedStroke: MutableState<String?>,
+    selectedForm: MutableState<String?>
+) {
+    // State für die ausgewählte Form-Option
+    // selectedForm is already provided via parameter
+
+    val formOptions = listOf("Formfehler Ja", "Formfehler Nein")
+
+    // Container, der sowohl die Form-Buttons als auch den Confirm-Button enthält
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 8.dp),
+        verticalArrangement = Arrangement.SpaceBetween // Verteile den Platz zwischen den Buttons
+    ) {
+        // Form Buttons Row
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 6.dp), // Padding für die Zeile
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            formOptions.forEach { form ->
+                Box(
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .size(80.dp)
+                        .background(
+                            color = if (selectedForm.value == form) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.secondaryContainer
+                        )
+                        .clickable {
+                            // Form auswählen
+                            selectedForm.value = form
+                            onFormSelect(form)
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = form,
+                        color = if (selectedForm.value == form) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onSecondaryContainer,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 2,
+                        textAlign = TextAlign.Center,
+                        softWrap = true, // Erlaubt Textumbruch ohne Worttrennung
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier
+                            .padding(horizontal = 4.dp)
+                            .fillMaxSize()
+                            .wrapContentSize(Alignment.Center)
+                    )
+                }
+            }
+        }
+
+        // Bestätigungsbutton immer am unteren Rand der Column
+        if (selectedForm.value != null) {
+            ConfirmButton(
+                selectedPlayer,
+                server,
+                opponent,
+                isTiebreak,
+                onSelectedPlayerChange,
+                showPointButtons,
+                selectedPoint,
+                selectedStroke,
+                selectedForm
+            )
+        }
+    }
+}
+
+
+@Composable
+fun ConfirmButton(
+    selectedPlayer: Player?,
+    server: Player,
+    opponent: Player,
+    isTiebreak: Boolean,
+    onSelectedPlayerChange: (Player?) -> Unit,
+    showPointButtons: Boolean,
+    selectedPoint: MutableState<String?>,
+    selectedStroke: MutableState<String?>,
+    selectedForm: MutableState<String?>
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(bottom = 1.dp),
+        contentAlignment = Alignment.BottomCenter
+    ) {
+        Button(
+            onClick = {
+                // Vergeben des Punktes an den ausgewählten Spieler
+                if (selectedPlayer != null) {
+                    addPointToPlayer(selectedPlayer, opponent, selectedPlayer == server, isTiebreak)
+                }
+                // Zurücksetzen des ausgewählten Spielers und UI-States
+                onSelectedPlayerChange(null)
+                selectedPoint.value = null
+                selectedStroke.value = null
+                selectedForm.value = null
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+                .padding(horizontal = 1.dp)
+                .clip(CircleShape),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.tertiary,
+                contentColor = MaterialTheme.colorScheme.onTertiary
+            )
+        ) {
+            Text("Bestätigen", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+
+fun addPointToPlayer(player: Player, opponent: Player, isServer: Boolean, isTiebreak: Boolean) {
+    val scores = listOf(0, 15, 30, 40)
+    if (player.score == 40 && opponent.score == 40) {
+        // Einstand-Logik
+        if (isTiebreak) {
+            player.tiebreakPoints++
+        } else {
+            // Vorteil-Logik
+            if (player.score == 40 && opponent.score == 40) {
+                player.score = 0
+                opponent.score = 0
+            } else if (player.score == 40) {
+                // Vorteil Vor
+                player.score = -1  // Special value for Vorteil Vor
+            } else if (opponent.score == 40) {
+                // Vorteil Rück
+                opponent.score = -1  // Special value for Vorteil Rück
+            }
+        }
+    } else if (player.score == -1) {
+        // Vorteil Vor, Punkt gewonnen
+        player.score = 0
+        opponent.score = 0
+        addGameToPlayer(player, isServer)
+    } else if (opponent.score == -1) {
+        // Vorteil Rück, Punkt gewonnen
+        opponent.score = 0
+        player.score = 0
+        addGameToPlayer(opponent, isServer)
+    } else {
+        player.score = when (player.score) {
+            0 -> 15
+            15 -> 30
+            30 -> 40
+            else -> player.score
+        }
+    }
+}
+
+fun addGameToPlayer(player: Player, isServer: Boolean) {
+    player.gamesWon++
+    if (player.gamesWon >= 6) {
+        // Überprüfen, ob der Satz gewonnen wurde
+        if (player.gamesWon - (player.gamesWon - player.gamesWon) >= 2) {
+            addSetToPlayer(player)
+        }
+    }
+}
+
+fun addSetToPlayer(player: Player) {
+    player.setsWon++
+    // Logik zum Überprüfen des Satzes und des Matchs
+    if (player.setsWon >= 3) {  // Für ein Best-of-5-Match
+        endMatch(player)
+    } else if (player.setsWon >= 2) {  // Für ein Best-of-3-Match
+        endMatch(player)
+    }
+    // Reset Spiele nach dem Gewinn eines Satzes
+    player.gamesWon = 0
+    // Falls Match-Tiebreak aktiv ist, könnte hier auch ein zusätzlicher Match-Tiebreak hinzugefügt werden
+}
+
+fun endMatch(winner: Player) {
+    // End-Match-Logik, z.B. Anzeigen des Gewinners
+    println("${winner.name} hat das Match gewonnen!")
 }
