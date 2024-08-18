@@ -1,32 +1,21 @@
 package com.example.tennisapp
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.tennisapp.ui.theme.TennisAppTheme
-import androidx.compose.material3.Icon
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
-import com.example.tennisapp.Spiellogik.numberOfSets
 
 
 @Composable
@@ -36,8 +25,8 @@ fun Scoreboard(
     currentGamePointsA: Int,
     currentGamePointsB: Int,
     isTieBreak: Boolean,
-    tieBreakScoreA: Int?,
-    tieBreakScoreB: Int?,
+    tieBreakScoreA: List<Int>?,
+    tieBreakScoreB: List<Int>?,
     server: Player,
     matchTieBreak: Boolean,
     gamesWonA: List<Int>,

@@ -3,9 +3,9 @@ package com.example.tennisapp
 data class Player(
     val name: String,
     var score: Int,
-    var gamesWon:Int,
-    var setsWon: Int,
-    var setTieBreakScore: Int = 0, // New property for set tie-break score
+    var gamesWon:List<Int>,
+    var setsWon: List<Int>,
+    var setTieBreakScore: List<Int>, // New property for set tie-break score
     var matchTieBreakScore: Int = 0, // New property for match tie-break score
     var isServing: Boolean = false
 )

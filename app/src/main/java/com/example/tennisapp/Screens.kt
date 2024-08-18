@@ -88,9 +88,22 @@ fun TennisStartScreen(navController: NavController) {
                 Spiellogik.setTieBreakEnabled = tieBreakEnabled
                 Spiellogik.matchTieBreakEnabled = matchTieBreakEnabled
 
-                // Navigate to MatchScreen and pass player data as arguments
-                val playerA = Player(name = playerOneName.text, score = 0, gamesWon = 0, setsWon = 0)
-                val playerB = Player(name = playerTwoName.text, score = 0, gamesWon = 0, setsWon = 0)
+                // Create players with empty lists for gamesWon, setsWon, and setTieBreakScore
+                val playerA = Player(
+                    name = playerOneName.text,
+                    score = 0,
+                    gamesWon = List(numberOfSets) { 0 }, // Initialize with zeros for each set
+                    setsWon = List(numberOfSets) { 0 },  // Initialize with zeros for each set
+                    setTieBreakScore = List(numberOfSets) { 0 } // Initialize with zeros for each set
+                )
+                val playerB = Player(
+                    name = playerTwoName.text,
+                    score = 0,
+                    gamesWon = List(numberOfSets) { 0 }, // Initialize with zeros for each set
+                    setsWon = List(numberOfSets) { 0 },  // Initialize with zeros for each set
+                    setTieBreakScore = List(numberOfSets) { 0 } // Initialize with zeros for each set
+                )
+
 
                 navController.currentBackStackEntry?.savedStateHandle?.set("playerA", playerA)
                 navController.currentBackStackEntry?.savedStateHandle?.set("playerB", playerB)
@@ -130,6 +143,11 @@ fun MatchScreen(navController: NavController) {
 
         // Determine if it's a match tiebreak
         val matchTieBreak = Spiellogik.matchTieBreakMode
+        val gamesWonA = playerA.gamesWon
+        val gamesWonB = playerB.gamesWon
+        val setsWonA = playerA.setsWon
+        val setsWonB = playerB.setsWon
+        val numberOfSets = Spiellogik.numberOfSets
 
         // UI Layout
         Column(
@@ -148,7 +166,12 @@ fun MatchScreen(navController: NavController) {
                 tieBreakScoreA = tieBreakScoreA,
                 tieBreakScoreB = tieBreakScoreB,
                 server = server,
-                matchTieBreak = matchTieBreak
+                matchTieBreak = matchTieBreak,
+                numberOfSets = numberOfSets,
+                gamesWonA = gamesWonA,
+                gamesWonB = gamesWonB,
+                setsWonA = setsWonA,
+                setsWonB = setsWonB
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -175,7 +198,8 @@ fun MatchScreen(navController: NavController) {
                 showPointButtons = selectedPlayer != null,
                 selectedPoint = remember { mutableStateOf<String?>(null) },
                 selectedStroke = remember { mutableStateOf<String?>(null) },
-                selectedForm = remember { mutableStateOf<String?>(null) }
+                selectedForm = remember { mutableStateOf<String?>(null) },
+                navController = navController
             )
         }
     }

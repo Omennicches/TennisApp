@@ -18,6 +18,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.tennisapp.Spiellogik.awardPoint
 
 //Baut die Selection Buttons
@@ -148,7 +149,8 @@ fun PointButtons(
     showPointButtons: Boolean,
     selectedPoint: MutableState<String?>,
     selectedStroke: MutableState<String?>,
-    selectedForm: MutableState<String?>
+    selectedForm: MutableState<String?>,
+    navController: NavController
 ) {
     // Punkte-Buttons, die angezeigt werden sollen
     val allPoints = listOf("Ass", "Netz Fehler", "Aus", "Doppel Aufpraller")
@@ -219,7 +221,8 @@ fun PointButtons(
             showPointButtons,
             selectedPoint,
             selectedStroke,
-            selectedForm
+            selectedForm,
+            navController = navController
         )
     } else if (selectedPoint.value in listOf("Netz Fehler", "Aus", "Doppel Aufpraller")) {
         StrokeButtons(
@@ -235,7 +238,8 @@ fun PointButtons(
             showPointButtons = showPointButtons,
             selectedPoint = selectedPoint,
             selectedStroke = selectedStroke,
-            selectedForm = selectedForm
+            selectedForm = selectedForm,
+            navController = navController
         )
     }
 }
@@ -252,7 +256,8 @@ fun StrokeButtons(
     showPointButtons: Boolean,
     selectedPoint: MutableState<String?>,
     selectedStroke: MutableState<String?>,
-    selectedForm: MutableState<String?>
+    selectedForm: MutableState<String?>,
+    navController: NavController
 ) {
     // State für den ausgewählten Stroke innerhalb der StrokeButtons
     // selectedStroke is already provided via parameter
@@ -309,7 +314,8 @@ fun StrokeButtons(
             showPointButtons = showPointButtons,
             selectedPoint = selectedPoint,
             selectedStroke = selectedStroke,
-            selectedForm = selectedForm
+            selectedForm = selectedForm,
+            navController = navController
         )
     }
 }
@@ -326,7 +332,8 @@ fun FormButtons(
     showPointButtons: Boolean,
     selectedPoint: MutableState<String?>,
     selectedStroke: MutableState<String?>,
-    selectedForm: MutableState<String?>
+    selectedForm: MutableState<String?>,
+    navController: NavController
 ) {
     // State für die ausgewählte Form-Option
     // selectedForm is already provided via parameter
@@ -391,7 +398,8 @@ fun FormButtons(
                 showPointButtons,
                 selectedPoint,
                 selectedStroke,
-                selectedForm
+                selectedForm,
+                navController = navController
             )
         }
     }
@@ -408,7 +416,8 @@ fun ConfirmButton(
     showPointButtons: Boolean,
     selectedPoint: MutableState<String?>,
     selectedStroke: MutableState<String?>,
-    selectedForm: MutableState<String?>
+    selectedForm: MutableState<String?>,
+    navController: NavController
 ) {
     Box(
         modifier = Modifier
@@ -419,7 +428,7 @@ fun ConfirmButton(
         Button(
             onClick = {
                 if (selectedPlayer != null) {
-                    awardPoint(selectedPlayer)
+                    awardPoint(selectedPlayer, navController)
                 }
                 onSelectedPlayerChange(null)
                 selectedPoint.value = null
