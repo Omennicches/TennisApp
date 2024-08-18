@@ -1,298 +1,182 @@
-package com.example.tennisapp
+package com.example.tennisapp.ui.theme
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
-import androidx.compose.material3.*
+import androidx.navigation.NavController
+import com.example.tennisapp.ConfirmButton
+import com.example.tennisapp.Player
+import com.example.tennisapp.Scoreboard
+import com.example.tennisapp.Spiellogik
 
-
-//Baut den Screen in dem der Spielstand erfasst wird
+// TennisStartScreen: This composable represents the initial screen where users enter player names and match settings.
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TennisStartScreen(
-    onStartMatch: (MatchSettings) -> Unit
-) {
-    // Zustand für die Auswahl
-    var selectedSets by remember { mutableIntStateOf(1) }
-    var selectedServer by remember { mutableStateOf("Spieler A") }
-    var matchtieBreak by remember { mutableStateOf(true) }
-    var matchStarted by remember { mutableStateOf(false) }
-    var selectedSurface by remember { mutableStateOf("Sand") }
-    var setTieBreak by remember { mutableStateOf(true) }
+fun TennisStartScreen(navController: NavController) {
+    // State variables to store player names, number of sets, and tie-break settings
+    var playerOneName by remember { mutableStateOf(TextFieldValue("")) }
+    var playerTwoName by remember { mutableStateOf(TextFieldValue("")) }
+    var numberOfSets by remember { mutableStateOf(3) }
+    var tieBreakEnabled by remember { mutableStateOf(true) }
+    var matchTieBreakEnabled by remember { mutableStateOf(false) }
 
-    // Player Variables
-    var playerA by remember {
-        mutableStateOf(Player(
-            name = "Spieler A",
-            score = 0,
-            setScores = mutableListOf(),  // Leere Liste für den Anfang
-            gamesWon = 0,
-            setsWon = 0
-        ))
-    }
-    var playerB by remember {
-        mutableStateOf(Player(
-            name = "Spieler B",
-            score = 0,
-            setScores = mutableListOf(),  // Leere Liste für den Anfang
-            gamesWon = 0,
-            setsWon = 0
-        ))
-    }
-
-
-
-    val backgroundImage = when (selectedSurface) {
-        "Sand" -> R.drawable.tennisplatz_clay
-        "Grass" -> R.drawable.tennisplatz_grass
-        "Hartplatz" -> R.drawable.tennisplatz_compund_ace
-        else -> R.drawable.tennisplatz_clay
-    }
-
-    if (matchStarted) {
-        MatchScreen(
-            playerA = playerA,
-            playerB = playerB,
-            selectedSurface = selectedSurface,
-            setTieBreak = setTieBreak,
-            selectedServer = selectedServer,
-            matchTieBreak = matchtieBreak,  // Richtiger Name
-            onBack = { matchStarted = false }
+    // Column to arrange UI elements vertically
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        // Text fields for player names
+        OutlinedTextField(
+            value = playerOneName,
+            onValueChange = { playerOneName = it },
+            label = { Text("Player One Name") }
         )
-    } else {
-        // Layout
-        Box(modifier = Modifier.fillMaxSize()) {
+        Spacer(modifier = Modifier.height(16.dp))
+        OutlinedTextField(
+            value = playerTwoName,
+            onValueChange = { playerTwoName = it },
+            label = { Text("Player Two Name") }
+        )
+        Spacer(modifier = Modifier.height(16.dp))
 
-            // Hintergrundbild
-            Image(
-                painter = painterResource(id = backgroundImage),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
+        // Radio buttons for selecting the number of sets
+        Row {
+            RadioButton(
+                selected = numberOfSets == 3,
+                onClick = { numberOfSets = 3 }
             )
+            Text("Best of 3 Sets")
+            Spacer(modifier = Modifier.width(16.dp))
+            RadioButton(
+                selected = numberOfSets == 5,
+                onClick = { numberOfSets = 5 }
+            )
+            Text("Best of 5 Sets")
+        }
+        Spacer(modifier = Modifier.height(16.dp))
 
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+        // Checkboxes for enabling tie-break and match tie-break
+        Row {
+            Checkbox(
+                checked = tieBreakEnabled,
+                onCheckedChange = { tieBreakEnabled = it }
+            )
+            Text("Enable Tie-Break")
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Row {
+            Checkbox(
+                checked = matchTieBreakEnabled,
+                onCheckedChange = { matchTieBreakEnabled = it }
+            )
+            Text("Enable Match Tie-Break")
+        }
+        Spacer(modifier = Modifier.height(16.dp))
 
-                // Untergrund
-                Text("Untergrund:", fontSize = 30.sp, fontWeight = FontWeight.Bold)
-                Row {
-                    SelectionButton(label = "Sand", selected = selectedSurface == "Sand") { selectedSurface = "Sand" }
-                    Spacer(modifier = Modifier.width(16.dp))
-                    SelectionButton(label = "Grass", selected = selectedSurface == "Grass") { selectedSurface = "Grass" }
-                    Spacer(modifier = Modifier.width(16.dp))
-                    SelectionButton(label = "Hartplatz", selected = selectedSurface == "Hartplatz") { selectedSurface = "Hartplatz" }
-                }
+        // Button to start the match
+        Button(
+            onClick = {
+                // Set game rules in Spiellogik
+                Spiellogik.numberOfSets = numberOfSets
+                Spiellogik.setTieBreakEnabled = tieBreakEnabled
+                Spiellogik.matchTieBreakEnabled = matchTieBreakEnabled
 
-                Spacer(modifier = Modifier.height(10.dp))
+                // Navigate to MatchScreen and pass player data as arguments
+                val playerA = Player(name = playerOneName.text, score = 0, gamesWon = 0, setsWon = 0)
+                val playerB = Player(name = playerTwoName.text, score = 0, gamesWon = 0, setsWon = 0)
 
-                // Auswahl der Anzahl der Sätze
-                Text("Anzahl der Sätze:", fontSize = 30.sp, fontWeight = FontWeight.Bold)
-                Row {
-                    SelectionButton(label = "1", selected = selectedSets == 1) { selectedSets = 1 }
-                    Spacer(modifier = Modifier.width(16.dp))
-                    SelectionButton(label = "3", selected = selectedSets == 3) { selectedSets = 3 }
-                    Spacer(modifier = Modifier.width(16.dp))
-                    SelectionButton(label = "5", selected = selectedSets == 5) { selectedSets = 5 }
-                }
+                navController.currentBackStackEntry?.savedStateHandle?.set("playerA", playerA)
+                navController.currentBackStackEntry?.savedStateHandle?.set("playerB", playerB)
 
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // Auswahl für Match Tie-Break
-                Text("Match Tie Break:", fontSize = 30.sp, fontWeight = FontWeight.Bold)
-                Row {
-                    SelectionButton(label = "Ja", selected = matchtieBreak) { matchtieBreak = true }
-                    Spacer(modifier = Modifier.width(16.dp))
-                    SelectionButton(label = "Nein", selected = !matchtieBreak) { matchtieBreak = false }
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                //Auswahl Satz Tie Break
-                Text("Satz Tiebreak:", fontSize = 30.sp, fontWeight = FontWeight.Bold)
-                Row {
-                    SelectionButton(label = "Ja", selected = setTieBreak) { setTieBreak = true }
-                    Spacer(modifier = Modifier.width(16.dp))
-                    SelectionButton(label = "Nein", selected = !setTieBreak) { setTieBreak = false }
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // Auswahl des Aufschlägers
-                Text("Aufschläger:", fontSize = 30.sp, fontWeight = FontWeight.Bold)
-                Row {
-                    SelectionButton(label = playerA.name, selected = selectedServer == playerA.name) { selectedServer = playerA.name }
-                    Spacer(modifier = Modifier.width(20.dp))
-                    SelectionButton(label = playerB.name, selected = selectedServer == playerB.name) { selectedServer = playerB.name }
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // Start Match Button
-                Button(
-                    onClick = { matchStarted = true },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(70.dp)
-                        .clip(CircleShape),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.tertiary,
-                        contentColor = MaterialTheme.colorScheme.onTertiary
-                    )
-                ) {
-                    Text("Match Starten!", fontSize = 35.sp, fontWeight = FontWeight.Bold)
-                }
+                navController.navigate("match_screen")
             }
+        ) {
+            Text("Start Match")
         }
     }
 }
 
+// MatchScreen: This composable represents the main match screen where the score and game controls are displayed.
 @Composable
-fun MatchScreen(
-    playerA: Player,
-    playerB: Player,
-    selectedSurface: String,
-    setTieBreak: Boolean,
-    matchTieBreak: Boolean,
-    selectedServer: String,
-    onBack: () -> Unit
-) {
-    val backgroundColor =
-        if (playerA.score > playerB.score) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.secondaryContainer
-    val server = if (playerA.name == selectedServer) playerA else playerB
-    val backgroundImage = when (selectedSurface) {
-        "Sand" -> R.drawable.tennisplatz_clay
-        "Grass" -> R.drawable.tennisplatz_grass
-        "Hartplatz" -> R.drawable.tennisplatz_compund_ace
-        else -> R.drawable.tennisplatz_clay
-    }
+fun MatchScreen(navController: NavController) {
+    // Retrieve player data from navigation arguments
+    val playerA = navController.currentBackStackEntry?.savedStateHandle?.get<Player>("playerA")
+    val playerB = navController.currentBackStackEntry?.savedStateHandle?.get<Player>("playerB")
 
-    // State to control the visibility and selection of buttons
-    var showPointButtons by remember { mutableStateOf(false) }
+    // State variable to track the selected player
     var selectedPlayer by remember { mutableStateOf<Player?>(null) }
-    val selectedPoint = remember { mutableStateOf<String?>(null) }
-    val selectedStroke = remember { mutableStateOf<String?>(null) }
-    val selectedForm = remember { mutableStateOf<String?>(null) }
 
-    // Reset showPointButtons state when selectedPlayer is null
-    LaunchedEffect(selectedPlayer) {
-        if (selectedPlayer == null) {
-            showPointButtons = false
-        }
-    }
+    if (playerA != null && playerB != null) {
+        // Calculate the current game points
+        val currentGamePointsA = playerA.score
+        val currentGamePointsB = playerB.score
 
-    // Dynamische Verwaltung der Sätze
-    val setScoresA = playerA.setScores.map { it.first }
-    val setScoresB = playerB.setScores.map { it.second }
+        // Determine if a tiebreak is active
+        val isTieBreak = Spiellogik.setTieBreakMode || Spiellogik.matchTieBreakMode
 
-    // Berechnung der aktuellen Punkte und TieBreak-Punkte
-    val currentGamePointsA = playerA.score
-    val currentGamePointsB = playerB.score
-    val tieBreakScoreA = if (setTieBreak || matchTieBreak) playerA.tiebreakPoints else null
-    val tieBreakScoreB = if (setTieBreak || matchTieBreak) playerB.tiebreakPoints else null
+        // Get the tiebreak scores
+        val tieBreakScoreA = if (isTieBreak) playerA.setTieBreakScore else null
+        val tieBreakScoreB = if (isTieBreak) playerB.setTieBreakScore else null
 
-    Box(modifier = Modifier
-        .fillMaxSize()
-        .background(backgroundColor)) {
-        // Hintergrundbild
-        Image(
-            painter = painterResource(id = backgroundImage),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
-        )
+        // Determine the server
+        val server = Spiellogik.currentServer ?: playerA
 
-        // Back Button
-        IconButton(
-            onClick = { onBack() },
-            modifier = Modifier
-                .padding(16.dp)
-                .align(Alignment.TopStart)
-                .zIndex(1f)
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Zurück",
-                tint = MaterialTheme.colorScheme.onBackground
-            )
-        }
+        // Determine if it's a match tiebreak
+        val matchTieBreak = Spiellogik.matchTieBreakMode
 
+        // UI Layout
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(30.dp))
-
-            // Dynamisches Scoreboard
+            // Display the scoreboard
             Scoreboard(
                 playerA = playerA,
                 playerB = playerB,
                 currentGamePointsA = currentGamePointsA,
                 currentGamePointsB = currentGamePointsB,
-                setScoresA = setScoresA,
-                setScoresB = setScoresB,
-                isTieBreak = setTieBreak || matchTieBreak,
+                isTieBreak = isTieBreak,
                 tieBreakScoreA = tieBreakScoreA,
                 tieBreakScoreB = tieBreakScoreB,
                 server = server,
                 matchTieBreak = matchTieBreak
             )
 
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Spieler Punktet Buttons
-            PlayerPointButtons(
-                playerA = playerA,
-                playerB = playerB,
-                selectedPlayer = selectedPlayer,
-                onSelectPlayer = { player ->
-                    selectedPlayer = player
-                    showPointButtons = true
-                }
-            )
-
-
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Punktet Buttons (bedingte Anzeige)
-            if (showPointButtons && selectedPlayer != null) {
-                PointButtons(
-                    selectedPlayer = selectedPlayer,
-                    server = server,
-                    opponent = if (server == playerA) playerB else playerA,
-                    isTiebreak = setTieBreak || matchTieBreak,
-                    onSelectedPlayerChange = { selectedPlayer = it },
-                    showPointButtons = showPointButtons,
-                    selectedPoint = selectedPoint,
-                    selectedStroke = selectedStroke,
-                    selectedForm = selectedForm
-                )
+            // Buttons to select a player
+            Row {
+                Button(onClick = { selectedPlayer = playerA }) {
+                    Text(playerA.name)
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Button(onClick = { selectedPlayer = playerB }) {
+                    Text(playerB.name)
+                }
             }
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Confirm button to award a point to the selected player
+            ConfirmButton(
+                selectedPlayer = selectedPlayer,
+                server = server,
+                opponent = if (server == playerA) playerB else playerA,
+                isTiebreak = isTieBreak,
+                onSelectedPlayerChange = { selectedPlayer = it },
+                showPointButtons = selectedPlayer != null,
+                selectedPoint = remember { mutableStateOf<String?>(null) },
+                selectedStroke = remember { mutableStateOf<String?>(null) },
+                selectedForm = remember { mutableStateOf<String?>(null) }
+            )
         }
     }
 }
-

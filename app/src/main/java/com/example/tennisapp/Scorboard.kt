@@ -34,14 +34,12 @@ fun Scoreboard(
     playerB: Player,
     currentGamePointsA: Int,
     currentGamePointsB: Int,
-    setScoresA: List<Int>, setScoresB: List<Int>,
     isTieBreak: Boolean,
     tieBreakScoreA: Int?,
     tieBreakScoreB: Int?,
     server: Player,
     matchTieBreak: Boolean
 ) {
-    val numberOfSets = maxOf(setScoresA.size, setScoresB.size)
 
     Row(
         modifier = Modifier
