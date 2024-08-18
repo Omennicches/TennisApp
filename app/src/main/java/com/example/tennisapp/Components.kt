@@ -18,6 +18,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.tennisapp.Spiellogik.awardPoint
 
 //Baut die Selection Buttons
 @Composable
@@ -418,7 +419,7 @@ fun ConfirmButton(
         Button(
             onClick = {
                 if (selectedPlayer != null) {
-                    addPointToPlayer(selectedPlayer, opponent, selectedPlayer == server, isTiebreak, false, false, 2, 1)  // Parameter anpassen
+                    awardPoint(selectedPlayer)
                 }
                 onSelectedPlayerChange(null)
                 selectedPoint.value = null
