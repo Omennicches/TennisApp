@@ -19,64 +19,20 @@ import androidx.compose.ui.text.style.TextOverflow
 
 
 @Composable
-fun Scoreboard(
-    playerA: Player,
-    playerB: Player,
-    currentGamePointsA: Int,
-    currentGamePointsB: Int,
-    isTieBreak: Boolean,
-    tieBreakScoreA: List<Int>?,
-    tieBreakScoreB: List<Int>?,
-    server: Player,
-    matchTieBreak: Boolean,
-    gamesWonA: List<Int>,
-    gamesWonB: List<Int>,
-    setsWonA: List<Int>,
-    setsWonB: List<Int>,
-    numberOfSets: Int
-) {
+fun Scoreboard(playerA: Player, playerB: Player) {
+    Column {
+        Text(text = "Score: ${playerA.score} - ${playerB.score}", color = Color.Red)
+        Text(text = "Games: ${playerA.gamesWon} - ${playerB.gamesWon}")
+        Text(text = "Sets: ${playerA.setsWon} - ${playerB.setsWon}")
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(0.dp)
-    ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Row(modifier = Modifier.fillMaxWidth()) {
-                PlayerBox(playerA.name, isServing = playerA == server)
-                ScoreBox(
-                    currentGamePoints = currentGamePointsA,
-                    isTieBreak = isTieBreak,
-                    tieBreakScore = tieBreakScoreA
-                )
+        // Display tie-break score if in tie-break mode
+        if (Spiellogik.setTieBreakMode) {
+            Text(text = "Tie-Break Score: ${playerA.setTieBreakScore} - ${playerB.setTieBreakScore}")
+        }
 
-                for (i in 0 until maxOf(1, numberOfSets)) {
-                    SetScoreBox(
-                        score = if (i < gamesWonA.size) gamesWonA[i] else 0,
-                        showTieBreak = i > 0,
-                        tieBreakScore = if (i > 0) tieBreakScoreA else null,
-                        isMatchTieBreak = matchTieBreak && i == 2
-                    )
-                }
-            }
-
-            Row(modifier = Modifier.fillMaxWidth()) {
-                PlayerBox(playerB.name, isServing = playerB == server)
-                ScoreBox(
-                    currentGamePoints = currentGamePointsB,
-                    isTieBreak = isTieBreak,
-                    tieBreakScore = tieBreakScoreB
-                )
-
-                for (i in 0 until maxOf(1, numberOfSets)) {
-                    SetScoreBox(
-                        score = if (i < gamesWonB.size) gamesWonB[i] else 0,
-                        showTieBreak = i > 0,
-                        tieBreakScore = if (i > 0) tieBreakScoreB else null,
-                        isMatchTieBreak = matchTieBreak && i == 2
-                    )
-                }
-            }
+        // Display match tie-break score if in match tie-break mode
+        if (Spiellogik.matchTieBreakMode) {
+            Text(text = "Match Tie-Break Score: ${playerA.matchTieBreakScore} - ${playerB.matchTieBreakScore}")
         }
     }
 }

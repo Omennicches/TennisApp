@@ -24,14 +24,14 @@ object Spiellogik {
         currentServer = initialServer
         playerA.score = 0
         playerB.score = 0
-        playerA.gamesWon = 0
-        playerB.gamesWon = 0
-        playerA.setsWon= 0
-        playerB.setsWon = 0
-        playerA.setTieBreakScore = 0
-        playerB.setTieBreakScore = 0
-        playerA.matchTieBreakScore = 0
-        playerB.matchTieBreakScore = 0
+        playerA.gamesWon = playerA.gamesWon
+        playerB.gamesWon = playerB.gamesWon
+        playerA.setsWon= playerA.setsWon
+        playerB.setsWon = playerB.setsWon
+        playerA.setTieBreakScore = playerA.setTieBreakScore
+        playerB.setTieBreakScore = playerB.setTieBreakScore
+        playerA.matchTieBreakScore = playerA.matchTieBreakScore
+        playerB.matchTieBreakScore = playerB.matchTieBreakScore
         setTieBreakMode = false
         matchTieBreakMode = false
     }
@@ -85,9 +85,9 @@ object Spiellogik {
 
     private fun awardSetTieBreakPoint(player: Player, playerA: Player, playerB: Player) {
         if (player == playerA) {
-            playerA.setTieBreakScore++
+            playerA.setTieBreakScore
         } else {
-            playerB.setTieBreakScore++
+            playerB.setTieBreakScore
         }
 
         if (playerA.setTieBreakScore >= 7 && playerA.setTieBreakScore >= playerB.setTieBreakScore + 2) {
@@ -154,9 +154,9 @@ object Spiellogik {
 
     private fun awardSet(player: Player, playerA: Player, playerB: Player) {
         if (player == playerA) {
-            playerA.setsWon++
+            playerA.setsWon
         } else {
-            playerB.setsWon++
+            playerB.setsWon
         }
     }
 

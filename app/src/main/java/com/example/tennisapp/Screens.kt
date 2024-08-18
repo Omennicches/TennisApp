@@ -160,18 +160,6 @@ fun MatchScreen(navController: NavController) {
             Scoreboard(
                 playerA = playerA,
                 playerB = playerB,
-                currentGamePointsA = currentGamePointsA,
-                currentGamePointsB = currentGamePointsB,
-                isTieBreak = isTieBreak,
-                tieBreakScoreA = tieBreakScoreA,
-                tieBreakScoreB = tieBreakScoreB,
-                server = server,
-                matchTieBreak = matchTieBreak,
-                numberOfSets = numberOfSets,
-                gamesWonA = gamesWonA,
-                gamesWonB = gamesWonB,
-                setsWonA = setsWonA,
-                setsWonB = setsWonB
             )
 
             Spacer(modifier = Modifier.height(16.dp))
