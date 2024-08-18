@@ -32,83 +32,88 @@ import androidx.compose.ui.text.style.TextOverflow
 fun Scoreboard(
     playerA: Player,
     playerB: Player,
-    currentGamePointsA: Int,
+    currentGamePointsA:Int,
     currentGamePointsB: Int,
     setScoresA: List<Int>,
     setScoresB: List<Int>,
     isTieBreak: Boolean,
     tieBreakScoreA: Int?,
     tieBreakScoreB: Int?,
-    server: Player
-) {val showTieBreak = isTieBreak || setScoresA.size > 1 // Show tiebreak in sets after the first one
+    server: Player,
+    matchTieBreak: Boolean
+) {
+    val numberOfSets = maxOf(setScoresA.size, setScoresB.size)
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(0.dp)
     ) {
-        Column(
-            modifier = Modifier.fillMaxWidth()
+        Column(modifier = Modifier.fillMaxWidth()
         ) {
-            Row(modifier = Modifier.fillMaxWidth()) { // Row for Player A
+            Row(modifier = Modifier.fillMaxWidth()) {
                 PlayerBox(playerA.name, isServing = playerA == server)
                 ScoreBox(
                     currentGamePoints = currentGamePointsA,
                     isTieBreak = isTieBreak,
                     tieBreakScore = tieBreakScoreA
                 )
-                // SetScoreBox for Player A
-                if (setScoresA.isNotEmpty() && setScoresB.isNotEmpty()) {
-                    SetScoreBox(
-                        scoreA = setScoresA.last(),
-                        scoreB = setScoresB.last(),
-                        showTieBreak = showTieBreak,
-                        tieBreakScoreA = if (showTieBreak) tieBreakScoreA else null,
-                        tieBreakScoreB = if (showTieBreak) tieBreakScoreB else null
-                    )
+                // Display SetScoreBoxes for Player A
+                for (i in 0 until numberOfSets) {
+                    if (i < setScoresA.size && i < setScoresB.size) {
+                        SetScoreBox(
+                            scoreA = setScoresA[i],
+                            scoreB = setScoresB[i],
+                            showTieBreak = i > 0, // Show tiebreak scores after the first set
+                            tieBreakScoreA = if (i > 0) tieBreakScoreA else null,
+                            tieBreakScoreB = if (i > 0) tieBreakScoreB else null,
+                            isMatchTieBreak = matchTieBreak && i == 2 // Assuming match tiebreak in 3rd set
+                        )
+                    }
                 }
             }
-            Row(modifier = Modifier.fillMaxWidth()) { // Row for Player B
+            Row(modifier= Modifier.fillMaxWidth()) {
                 PlayerBox(playerB.name, isServing = playerB == server)
                 ScoreBox(
                     currentGamePoints = currentGamePointsB,
                     isTieBreak = isTieBreak,
                     tieBreakScore = tieBreakScoreB
                 )
-                // SetScoreBox for Player B
-                if (setScoresA.isNotEmpty() && setScoresB.isNotEmpty()) {
-                    SetScoreBox(
-                        scoreA = setScoresA.last(),
-                        scoreB =setScoresB.last(),
-                        showTieBreak = showTieBreak,
-                        tieBreakScoreA = if (showTieBreak) tieBreakScoreA else null,
-                        tieBreakScoreB = if (showTieBreak) tieBreakScoreB else null
-                    )
+                // Display SetScoreBoxes for Player B
+                for (i in 0 until numberOfSets) {
+                    if (i < setScoresA.size && i < setScoresB.size) {
+                        SetScoreBox(
+                            scoreA = setScoresA[i],
+                            scoreB = setScoresB[i],
+                            showTieBreak = i > 0, // Show tiebreak scores after the first set
+                            tieBreakScoreA = if (i > 0) tieBreakScoreA else null,
+                            tieBreakScoreB = if (i > 0) tieBreakScoreB else null,
+                            isMatchTieBreak = matchTieBreak && i == 2 // Assuming match tiebreak in 3rd set
+                        )
+                    }
                 }
             }
         }
     }
 }
 
-
 @Composable
 fun PlayerBox(playerName: String, isServing: Boolean) {
     Box(
         modifier = Modifier
-            .width(120.dp) // Vorgeschriebene Breite für die PlayerBox
+            .width(120.dp)
             .height(50.dp)
             .background(MaterialTheme.colorScheme.primary)
             .padding(1.dp),
         contentAlignment = Alignment.CenterStart
-    ){
+    ) {
         val density = LocalDensity.current
         val fontSize = with(density) {
             val maxFontSize = 60.sp.toPx()
-            val minFontSize = 15.sp.toPx() // Adjust min font size as needed
+            val minFontSize = 15.sp.toPx()
             val textLength = playerName.length
-            val boxWidth = 120.dp.toPx() // Use box width for calculation
-            val sizeRatio = boxWidth / textLength
-            (sizeRatio / 2).coerceIn(minFontSize, maxFontSize).toSp() // Adjust divisor as needed
+            val boxWidth = 120.dp.toPx()
+            (boxWidth / (textLength * 2)).coerceIn(minFontSize, maxFontSize).toSp()
         }
         Text(
             text = playerName,
@@ -120,7 +125,7 @@ fun PlayerBox(playerName: String, isServing: Boolean) {
             fontWeight = FontWeight.Bold,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(end = if (isServing) 30.dp else 0.dp)
+                .padding(end = if(isServing) 30.dp else 0.dp)
         )
         if (isServing) {
             Image(
@@ -134,33 +139,32 @@ fun PlayerBox(playerName: String, isServing: Boolean) {
     }
 }
 
-
 @Composable
 fun ScoreBox(
     currentGamePoints: Int,
     isTieBreak: Boolean,
-    tieBreakScore: Int?,
+    tieBreakScore: Int?
 ) {
     Box(
         modifier = Modifier
             .width(50.dp)
-            .height(50.dp) // Gleiche Höhe wie die PlayerBox
+            .height(50.dp)
             .background(MaterialTheme.colorScheme.primaryContainer)
             .padding(8.dp),
         contentAlignment = Alignment.Center
     ) {
+        val scoreText = if (isTieBreak) {
+            tieBreakScore?.toString() ?: "0"
+        } else {
+            getPointStatus(currentGamePoints)
+        }
         Text(
-            text = if (isTieBreak && tieBreakScore != null) {
-                "$tieBreakScore"
-            } else {
-                getPointStatus(currentGamePoints)
-            },
+            text = scoreText,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold
         )
     }
 }
-
 
 @Composable
 fun SetScoreBox(
@@ -168,29 +172,38 @@ fun SetScoreBox(
     scoreB: Int,
     showTieBreak: Boolean,
     tieBreakScoreA: Int?,
-    tieBreakScoreB: Int?
+    tieBreakScoreB: Int?,
+    isMatchTieBreak: Boolean
 ) {
     Box(
         modifier = Modifier
             .width(50.dp)
-            .height(50.dp) // Gleiche Höhe wie die PlayerBox
+            .height(50.dp)
             .background(MaterialTheme.colorScheme.secondary)
             .padding(4.dp),
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(text = "$scoreA", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-            Text(text = "$scoreB", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-            if (showTieBreak && tieBreakScoreA != null && tieBreakScoreB != null) {
-                Text(
-                    text = "$tieBreakScoreA-$tieBreakScoreB",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.error
-                )
+        val text = if (isMatchTieBreak) {
+            "$tieBreakScoreA-$tieBreakScoreB"
+        } else {
+            buildString {
+                append(scoreA)
+                append("\n")
+                append(scoreB)
+                if (showTieBreak && tieBreakScoreA != null && tieBreakScoreB != null) {
+                    append(" ")
+                    append(tieBreakScoreA)
+                    append("-")
+                    append(tieBreakScoreB)
+                }
             }
         }
+        Text(
+            text = text,
+            fontSize = if (isMatchTieBreak) 12.sp else 20.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+            color = if (isMatchTieBreak) MaterialTheme.colorScheme.error else Color.Unspecified
+        )
     }
 }
