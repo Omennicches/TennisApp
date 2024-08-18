@@ -26,6 +26,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import com.example.tennisapp.Spiellogik.numberOfSets
 
 
 @Composable
@@ -38,7 +39,12 @@ fun Scoreboard(
     tieBreakScoreA: Int?,
     tieBreakScoreB: Int?,
     server: Player,
-    matchTieBreak: Boolean
+    matchTieBreak: Boolean,
+    gamesWonA: List<Int>,
+    gamesWonB: List<Int>,
+    setsWonA: List<Int>,
+    setsWonB: List<Int>,
+    numberOfSets: Int
 ) {
 
     Row(
@@ -57,7 +63,7 @@ fun Scoreboard(
 
                 for (i in 0 until maxOf(1, numberOfSets)) {
                     SetScoreBox(
-                        score = if (i < setScoresA.size) setScoresA[i] else 0,
+                        score = if (i < gamesWonA.size) gamesWonA[i] else 0,
                         showTieBreak = i > 0,
                         tieBreakScore = if (i > 0) tieBreakScoreA else null,
                         isMatchTieBreak = matchTieBreak && i == 2
@@ -75,7 +81,7 @@ fun Scoreboard(
 
                 for (i in 0 until maxOf(1, numberOfSets)) {
                     SetScoreBox(
-                        score = if (i < setScoresB.size) setScoresB[i] else 0,
+                        score = if (i < gamesWonB.size) gamesWonB[i] else 0,
                         showTieBreak = i > 0,
                         tieBreakScore = if (i > 0) tieBreakScoreB else null,
                         isMatchTieBreak = matchTieBreak && i == 2
