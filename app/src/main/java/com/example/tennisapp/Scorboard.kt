@@ -32,10 +32,9 @@ import androidx.compose.ui.text.style.TextOverflow
 fun Scoreboard(
     playerA: Player,
     playerB: Player,
-    currentGamePointsA:Int,
+    currentGamePointsA: Int,
     currentGamePointsB: Int,
-    setScoresA: List<Int>,
-    setScoresB: List<Int>,
+    setScoresA: List<Int>, setScoresB: List<Int>,
     isTieBreak: Boolean,
     tieBreakScoreA: Int?,
     tieBreakScoreB: Int?,
@@ -49,8 +48,7 @@ fun Scoreboard(
             .fillMaxWidth()
             .padding(0.dp)
     ) {
-        Column(modifier = Modifier.fillMaxWidth()
-        ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
             Row(modifier = Modifier.fillMaxWidth()) {
                 PlayerBox(playerA.name, isServing = playerA == server)
                 ScoreBox(
@@ -58,32 +56,33 @@ fun Scoreboard(
                     isTieBreak = isTieBreak,
                     tieBreakScore = tieBreakScoreA
                 )
-                // Display SetScoreBoxes for Player A
-                SetScoreBox(
-                    scoreA = setScoresA.lastOrNull() ?: 0,
-                    scoreB = setScoresB.lastOrNull() ?: 0,
-                    showTieBreak = numberOfSets > 1,
-                    tieBreakScoreA = if (numberOfSets > 1) tieBreakScoreA else null,
-                    tieBreakScoreB = if (numberOfSets > 1) tieBreakScoreB else null,
-                    isMatchTieBreak = matchTieBreak && numberOfSets == 3
-                )
+
+                for (i in 0 until maxOf(1, numberOfSets)) {
+                    SetScoreBox(
+                        score = if (i < setScoresA.size) setScoresA[i] else 0,
+                        showTieBreak = i > 0,
+                        tieBreakScore = if (i > 0) tieBreakScoreA else null,
+                        isMatchTieBreak = matchTieBreak && i == 2
+                    )
+                }
             }
-            Row(modifier= Modifier.fillMaxWidth()) {
+
+            Row(modifier = Modifier.fillMaxWidth()) {
                 PlayerBox(playerB.name, isServing = playerB == server)
                 ScoreBox(
                     currentGamePoints = currentGamePointsB,
                     isTieBreak = isTieBreak,
                     tieBreakScore = tieBreakScoreB
                 )
-                // Display SetScoreBoxes for Player B
-                SetScoreBox(
-                    scoreA = setScoresA.lastOrNull() ?: 0,
-                    scoreB = setScoresB.lastOrNull() ?: 0,
-                    showTieBreak = numberOfSets > 1,
-                    tieBreakScoreA = if (numberOfSets > 1) tieBreakScoreA else null,
-                    tieBreakScoreB = if (numberOfSets > 1) tieBreakScoreB else null,
-                    isMatchTieBreak = matchTieBreak && numberOfSets == 3
-                )
+
+                for (i in 0 until maxOf(1, numberOfSets)) {
+                    SetScoreBox(
+                        score = if (i < setScoresB.size) setScoresB[i] else 0,
+                        showTieBreak = i > 0,
+                        tieBreakScore = if (i > 0) tieBreakScoreB else null,
+                        isMatchTieBreak = matchTieBreak && i == 2
+                    )
+                }
             }
         }
     }
@@ -160,11 +159,9 @@ fun ScoreBox(
 
 @Composable
 fun SetScoreBox(
-    scoreA: Int,
-    scoreB: Int,
+    score: Int,
     showTieBreak: Boolean,
-    tieBreakScoreA: Int?,
-    tieBreakScoreB: Int?,
+    tieBreakScore: Int?,
     isMatchTieBreak: Boolean
 ) {
     Box(
@@ -176,22 +173,17 @@ fun SetScoreBox(
         contentAlignment = Alignment.Center
     ) {
         val text = if (isMatchTieBreak) {
-            "$tieBreakScoreA-$tieBreakScoreB"
+            "$tieBreakScore-$tieBreakScore"
         } else {
             buildString {
-                append(scoreA)
-                append("\n")
-                append(scoreB)
-                if (showTieBreak && tieBreakScoreA != null && tieBreakScoreB != null) {
+                append(score)
+                if (showTieBreak && tieBreakScore != null) {
                     append(" ")
-                    append(tieBreakScoreA)
-                    append("-")
-                    append(tieBreakScoreB)
+                    append(tieBreakScore)
                 }
             }
         }
-        Text(
-            text = text,
+        Text(text = text,
             fontSize = if (isMatchTieBreak) 12.sp else 20.sp,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
