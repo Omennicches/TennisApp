@@ -3,10 +3,10 @@ package com.example.tennisapp
 data class Player(
     val name: String,
     var score: Int,
-    var setScores: MutableList<Pair<Int, Int>> = mutableListOf(), // Liste von Paaren (z.B. Satzpunktestand)
-    var gamesWon: Int,
+    var gamesWon:Int,
     var setsWon: Int,
-    var tiebreakPoints: Int = 0,
+    var setTieBreakScore: Int = 0, // New property for set tie-break score
+    var matchTieBreakScore: Int = 0, // New property for match tie-break score
     var isServing: Boolean = false
 )
 enum class PointStatus(val display: String) {
