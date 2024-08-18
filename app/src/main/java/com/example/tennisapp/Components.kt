@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -14,7 +13,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -37,18 +35,18 @@ fun SelectionButton(label: String, selected: Boolean, onClick: () -> Unit) {
     ) {
         val density = LocalDensity.current
         val fontSize = with(density) {
-            // Calculate the font size based on the label length
-            // Maximum font size is 20.sp, minimum font size is 10.sp
-            (80 / label.length).dp.toSp().value.coerceIn(15f, 25f).sp
+            // Berechne die Schriftgröße mit einem Minimum und Maximum
+            val calculatedFontSize = (80 / label.length).dp.toSp().value
+            calculatedFontSize.coerceIn(15f, 20f).sp
         }
         Text(
             text = label,
             color = textColor,
             fontSize = fontSize,
             fontWeight = FontWeight.Bold,
-            maxLines = 2,  // Allow up to 2 lines of text
+            maxLines = 2,
             textAlign = TextAlign.Center,
-            softWrap = true, //enables text wrapping without breaking words
+            softWrap = true,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier
                 .padding(horizontal = 1.dp)
@@ -58,38 +56,7 @@ fun SelectionButton(label: String, selected: Boolean, onClick: () -> Unit) {
     }
 }
 
-@Composable
-fun PlayerScoreCard(player: Player, isServing: Boolean) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp)
-            .background(MaterialTheme.colorScheme.surface)
-            .clip(CircleShape)
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(
-            text = player.name,
-            fontSize = 18.sp,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Text(
-            text = player.score.toString(),
-            fontSize = 24.sp,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        if (isServing) {
-            Icon(
-                painter = painterResource(id = R.drawable.tennisball),
-                contentDescription = "Serving",
-                modifier = Modifier.size(24.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
-        }
-    }
-}
+
 
 @Composable
 fun PlayerPointButtons(
@@ -450,11 +417,9 @@ fun ConfirmButton(
     ) {
         Button(
             onClick = {
-                // Vergeben des Punktes an den ausgewählten Spieler
                 if (selectedPlayer != null) {
-                    addPointToPlayer(selectedPlayer, opponent, selectedPlayer == server, isTiebreak)
+                    addPointToPlayer(selectedPlayer, opponent, selectedPlayer == server, isTiebreak, false, false, 2, 1)  // Parameter anpassen
                 }
-                // Zurücksetzen des ausgewählten Spielers und UI-States
                 onSelectedPlayerChange(null)
                 selectedPoint.value = null
                 selectedStroke.value = null

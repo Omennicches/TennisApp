@@ -22,10 +22,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.compose.material3.*
+
 
 //Baut den Screen in dem der Spielstand erfasst wird
 @Composable
-fun TennisStartScreen() {
+fun TennisStartScreen(
+    onStartMatch: (MatchSettings) -> Unit
+) {
     // Zustand für die Auswahl
     var selectedSets by remember { mutableIntStateOf(1) }
     var selectedServer by remember { mutableStateOf("Spieler A") }
@@ -35,8 +39,26 @@ fun TennisStartScreen() {
     var setTieBreak by remember { mutableStateOf(true) }
 
     // Player Variables
-    var playerA by remember { mutableStateOf(Player("Spieler A")) }
-    var playerB by remember { mutableStateOf(Player("Spieler B")) }
+    var playerA by remember {
+        mutableStateOf(Player(
+            name = "Spieler A",
+            score = 0,
+            setScores = mutableListOf(),  // Leere Liste für den Anfang
+            gamesWon = 0,
+            setsWon = 0
+        ))
+    }
+    var playerB by remember {
+        mutableStateOf(Player(
+            name = "Spieler B",
+            score = 0,
+            setScores = mutableListOf(),  // Leere Liste für den Anfang
+            gamesWon = 0,
+            setsWon = 0
+        ))
+    }
+
+
 
     val backgroundImage = when (selectedSurface) {
         "Sand" -> R.drawable.tennisplatz_clay
@@ -52,7 +74,7 @@ fun TennisStartScreen() {
             selectedSurface = selectedSurface,
             setTieBreak = setTieBreak,
             selectedServer = selectedServer,
-            matchtieBreak = matchtieBreak,
+            matchTieBreak = matchtieBreak,  // Richtiger Name
             onBack = { matchStarted = false }
         )
     } else {
@@ -148,21 +170,19 @@ fun TennisStartScreen() {
     }
 }
 
-// MatchScreen composable function
 @Composable
 fun MatchScreen(
     playerA: Player,
     playerB: Player,
     selectedSurface: String,
     setTieBreak: Boolean,
+    matchTieBreak: Boolean,
     selectedServer: String,
-    matchtieBreak: Boolean,
     onBack: () -> Unit
 ) {
     val backgroundColor =
         if (playerA.score > playerB.score) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.secondaryContainer
     val server = if (playerA.name == selectedServer) playerA else playerB
-    val receiver = if (server == playerA) playerB else playerA
     val backgroundImage = when (selectedSurface) {
         "Sand" -> R.drawable.tennisplatz_clay
         "Grass" -> R.drawable.tennisplatz_grass
@@ -184,7 +204,19 @@ fun MatchScreen(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(backgroundColor)) {
+    // Dynamische Verwaltung der Sätze
+    val setScoresA = playerA.setScores.map { it.first }
+    val setScoresB = playerB.setScores.map { it.second }
+
+    // Berechnung der aktuellen Punkte und TieBreak-Punkte
+    val currentGamePointsA = playerA.score
+    val currentGamePointsB = playerB.score
+    val tieBreakScoreA = if (setTieBreak || matchTieBreak) playerA.tiebreakPoints else null
+    val tieBreakScoreB = if (setTieBreak || matchTieBreak) playerB.tiebreakPoints else null
+
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .background(backgroundColor)) {
         // Hintergrundbild
         Image(
             painter = painterResource(id = backgroundImage),
@@ -199,7 +231,7 @@ fun MatchScreen(
             modifier = Modifier
                 .padding(16.dp)
                 .align(Alignment.TopStart)
-                .zIndex(1f) // Ensure it's on top
+                .zIndex(1f)
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -213,13 +245,23 @@ fun MatchScreen(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            // Spieler A
-            PlayerScoreCard(player = playerA, isServing = playerA.name == selectedServer)
+            Spacer(modifier = Modifier.height(30.dp))
 
-            // Spieler B
-            PlayerScoreCard(player = playerB, isServing = playerB.name == selectedServer)
+            // Dynamisches Scoreboard
+            Scoreboard(
+                playerA = playerA,
+                playerB = playerB,
+                currentGamePointsA = currentGamePointsA,
+                currentGamePointsB = currentGamePointsB,
+                setScoresA = setScoresA,
+                setScoresB = setScoresB,
+                isTieBreak = setTieBreak || matchTieBreak,
+                tieBreakScoreA = tieBreakScoreA,
+                tieBreakScoreB = tieBreakScoreB,
+                server = server
+            )
 
-            Spacer(modifier = Modifier.height(80.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             // Spieler Punktet Buttons
             PlayerPointButtons(
@@ -227,11 +269,11 @@ fun MatchScreen(
                 playerB = playerB,
                 selectedPlayer = selectedPlayer,
                 onSelectPlayer = { player ->
-                    // Handle player selection
                     selectedPlayer = player
                     showPointButtons = true
                 }
             )
+
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -241,14 +283,15 @@ fun MatchScreen(
                     selectedPlayer = selectedPlayer,
                     server = server,
                     opponent = if (server == playerA) playerB else playerA,
-                    isTiebreak = setTieBreak,
+                    isTiebreak = setTieBreak || matchTieBreak,
                     onSelectedPlayerChange = { selectedPlayer = it },
-                    showPointButtons = showPointButtons,  // Pass the state reference
-                    selectedPoint = selectedPoint,  // Pass the state reference
-                    selectedStroke = selectedStroke,  // Pass the state reference
-                    selectedForm = selectedForm  // Pass the state reference
+                    showPointButtons = showPointButtons,
+                    selectedPoint = selectedPoint,
+                    selectedStroke = selectedStroke,
+                    selectedForm = selectedForm
                 )
             }
         }
     }
 }
+
