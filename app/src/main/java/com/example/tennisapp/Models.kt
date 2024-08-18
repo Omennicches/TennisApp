@@ -5,8 +5,8 @@ data class Player(
     var score: Int,
     var gamesWon:List<Int>,
     var setsWon: List<Int>,
-    var setTieBreakScore: List<Int>, // New property for set tie-break score
-    var matchTieBreakScore: Int = 0, // New property for match tie-break score
+    var setTieBreakScore: List<Int>,
+    var matchTieBreakScore: List<Int>,
     var isServing: Boolean = false
 )
 enum class PointStatus(val display: String) {
