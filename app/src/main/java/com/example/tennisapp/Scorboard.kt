@@ -59,18 +59,14 @@ fun Scoreboard(
                     tieBreakScore = tieBreakScoreA
                 )
                 // Display SetScoreBoxes for Player A
-                for (i in 0 until numberOfSets) {
-                    if (i < setScoresA.size && i < setScoresB.size) {
-                        SetScoreBox(
-                            scoreA = setScoresA[i],
-                            scoreB = setScoresB[i],
-                            showTieBreak = i > 0, // Show tiebreak scores after the first set
-                            tieBreakScoreA = if (i > 0) tieBreakScoreA else null,
-                            tieBreakScoreB = if (i > 0) tieBreakScoreB else null,
-                            isMatchTieBreak = matchTieBreak && i == 2 // Assuming match tiebreak in 3rd set
-                        )
-                    }
-                }
+                SetScoreBox(
+                    scoreA = setScoresA.lastOrNull() ?: 0,
+                    scoreB = setScoresB.lastOrNull() ?: 0,
+                    showTieBreak = numberOfSets > 1,
+                    tieBreakScoreA = if (numberOfSets > 1) tieBreakScoreA else null,
+                    tieBreakScoreB = if (numberOfSets > 1) tieBreakScoreB else null,
+                    isMatchTieBreak = matchTieBreak && numberOfSets == 3
+                )
             }
             Row(modifier= Modifier.fillMaxWidth()) {
                 PlayerBox(playerB.name, isServing = playerB == server)
@@ -80,18 +76,14 @@ fun Scoreboard(
                     tieBreakScore = tieBreakScoreB
                 )
                 // Display SetScoreBoxes for Player B
-                for (i in 0 until numberOfSets) {
-                    if (i < setScoresA.size && i < setScoresB.size) {
-                        SetScoreBox(
-                            scoreA = setScoresA[i],
-                            scoreB = setScoresB[i],
-                            showTieBreak = i > 0, // Show tiebreak scores after the first set
-                            tieBreakScoreA = if (i > 0) tieBreakScoreA else null,
-                            tieBreakScoreB = if (i > 0) tieBreakScoreB else null,
-                            isMatchTieBreak = matchTieBreak && i == 2 // Assuming match tiebreak in 3rd set
-                        )
-                    }
-                }
+                SetScoreBox(
+                    scoreA = setScoresA.lastOrNull() ?: 0,
+                    scoreB = setScoresB.lastOrNull() ?: 0,
+                    showTieBreak = numberOfSets > 1,
+                    tieBreakScoreA = if (numberOfSets > 1) tieBreakScoreA else null,
+                    tieBreakScoreB = if (numberOfSets > 1) tieBreakScoreB else null,
+                    isMatchTieBreak = matchTieBreak && numberOfSets == 3
+                )
             }
         }
     }
