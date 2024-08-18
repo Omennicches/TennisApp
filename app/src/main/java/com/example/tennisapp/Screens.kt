@@ -258,7 +258,8 @@ fun MatchScreen(
                 isTieBreak = setTieBreak || matchTieBreak,
                 tieBreakScoreA = tieBreakScoreA,
                 tieBreakScoreB = tieBreakScoreB,
-                server = server
+                server = server,
+                matchTieBreak = matchTieBreak
             )
 
             Spacer(modifier = Modifier.height(20.dp))
