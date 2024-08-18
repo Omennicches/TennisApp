@@ -3,9 +3,13 @@ package com.example.tennisapp
 data class Player(
     val name: String,
     var score: Int,
+    var gamesWonCurrentSet: Int,
     var gamesWon:List<Int>,
+    var currentSetsWon: Int,
     var setsWon: List<Int>,
+    var currentTieBreakScore: Int,
     var setTieBreakScore: List<Int>,
+    var currentMatchTieBreakScore: Int,
     var matchTieBreakScore: List<Int>,
     var isServing: Boolean = false
 )
