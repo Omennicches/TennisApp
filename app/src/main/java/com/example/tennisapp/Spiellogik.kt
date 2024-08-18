@@ -1,166 +1,177 @@
 package com.example.tennisapp
 
-import androidx.compose.runtime.*
+import androidx.media3.common.Player
 
+object Spiellogik {
 
-// Funktion zum Starten des Satz-Tiebreaks
-fun startSetTieBreak(playerA: Player, playerB: Player) {
-    playerA.tiebreakPoints = 0
-    playerB.tiebreakPoints = 0
-}
+    // Game Rules(set in TennisStartScreen)
+    var numberOfSets = 3
+    var setTieBreakEnabled = true
+    var matchTieBreakEnabled = true
+    var initialServer: Player? = null
 
-// Funktion zum Starten des Match-Tiebreaks
-fun startMatchTieBreak(playerA: Player, playerB: Player) {
-    playerA.tiebreakPoints = 0
-    playerB.tiebreakPoints = 0
-}
+    // Match State
+    var currentServer: Player? = null
+    var playerA: Player? = null
+    var playerB: Player? = null
+    var tieBreakScoreA: Int = 0
+    var tieBreakScoreB: Int = 0
 
-// Funktion zum Vergeben eines Punktes
-fun addPointToPlayer(
-    player: Player,
-    opponent: Player,
-    isServing: Boolean,
-    isTiebreak: Boolean,
-    isMatchTiebreak: Boolean,
-    setTieBreak: Boolean,
-    setsToWin: Int,
-    currentSet: Int
-) {
-    if (isTiebreak) {
-        if (isMatchTiebreak) {
-            addPointInMatchTieBreak(player, opponent)
+    // Tiebreak Modes
+    var setTieBreakMode = false
+    var matchTieBreakMode = falsefun initializeMatch(playerA: Player, playerB: Player) {
+        this.playerA = playerA
+        this.playerB = playerB
+        currentServer = initialServer
+        this.playerA.score = 0
+        this.playerB.score = 0
+        this.playerA.gamesWon = 0
+        this.playerB.gamesWon = 0
+        this.playerA.setsWon = 0
+        this.playerB.setsWon = 0
+        this.playerA.setScores = mutableListOf()
+        this.playerB.setScores = mutableListOf()
+        tieBreakScoreA = 0
+        tieBreakScoreB = 0
+        setTieBreakMode = false
+        matchTieBreakMode = false
+    }
+
+    fun awardPoint(player: Player) {
+        if (matchTieBreakMode) {
+            awardMatchTieBreakPoint(player)
+        } else if (setTieBreakMode) {
+            awardSetTieBreakPoint(player)
         } else {
-            addPointInSetTieBreak(player, opponent)
+            awardGamePoint(player)
         }
-    } else {
-        addPointInRegularGame(player, opponent, currentSet, setsToWin)
     }
 
-    checkAndHandleSetWin(player, opponent, setsToWin, currentSet)
-}
-
-// Funktion zum Vergeben eines Punktes im Satz-Tiebreak
-fun addPointInSetTieBreak(player: Player, opponent: Player) {
-    player.tiebreakPoints += 1
-    if (player.tiebreakPoints >= 7 && player.tiebreakPoints - opponent.tiebreakPoints >= 2) {
-        player.gamesWon += 1 // Satz gewonnen
-        player.tiebreakPoints = 0
-        opponent.tiebreakPoints = 0
-    }
-}
-
-// Funktion zum Vergeben eines Punktes im Match-Tiebreak
-fun addPointInMatchTieBreak(player: Player, opponent: Player) {
-    player.tiebreakPoints += 1
-    if (player.tiebreakPoints >= 10 && player.tiebreakPoints - opponent.tiebreakPoints >= 2) {
-        player.setsWon += 1 // Match gewonnen
-        player.tiebreakPoints = 0
-        opponent.tiebreakPoints = 0
-    }
-}
-
-// Funktion zum Vergeben eines Punktes im regulären Spiel
-fun addPointInRegularGame(player: Player, opponent: Player, currentSet: Int, setsToWin: Int) {
-    when (player.score) {
-        0 -> player.score = 1  // LOVE -> FIFTEEN
-        1 -> player.score = 2  // FIFTEEN -> THIRTY
-        2 -> player.score = 3  // THIRTY -> FORTY
-        3 -> {
-            if (opponent.score == 3) {  // Beide haben FORTY
-                if (player.score == 4) {  // Spieler hat ADVANTAGE
-                    player.score = 0  // ADVANTAGE -> LOVE (Spiel gewonnen)
-                    player.gamesWon += 1
-                    checkAndHandleSetWin(player, opponent, setsToWin, currentSet)
-                } else if (opponent.score == 4) {  // Gegner hat ADVANTAGE
-                    player.score = 3  // ADVANTAGE -> DEUCE
-                } else {
-                    player.score = 4  // FORTY -> ADVANTAGE
-                }
-            } else {
-                player.score = 0  // FORTY -> LOVE (Spiel gewonnen)
-                player.gamesWon += 1
-                checkAndHandleSetWin(player, opponent, setsToWin, currentSet)
+    private fun awardGamePoint(player: Player) {
+        if (player == playerA) {
+            playerA!!.score++
+            if (playerA!!.score == 4 && playerB!!.score < 3) {
+                awardGame(playerA!!)
+            } else if (playerA!!.score == 4 && playerB!!.score == 3) {
+                // Advantage Player A
+            } else if (playerA!!.score == 5 && playerB!!.score == 3) {
+                awardGame(playerA!!)
+            } else if (playerA!!.score == 4 && playerB!!.score == 4) {
+                // Deuce
+                playerA!!.score = 3
+                playerB!!.score = 3
+            }
+        } else {
+            playerB!!.score++
+            if (playerB!!.score == 4 && playerA!!.score < 3) {
+                awardGame(playerB!!)
+            } else if (playerB!!.score == 4 && playerA!!.score == 3) {
+                // Advantage Player B
+            } else if (playerB!!.score == 5 && playerA!!.score == 3) {
+                awardGame(playerB!!)
+            } else if (playerB!!.score == 4 && playerA!!.score == 4) {
+                // Deuce
+                playerA!!.score = 3
+                playerB!!.score = 3
             }
         }
-        4 -> {  // Spieler hat ADVANTAGE
-            player.score = 0  // ADVANTAGE -> LOVE (Spiel gewonnen)
-            player.gamesWon += 1
-            checkAndHandleSetWin(player, opponent, setsToWin, currentSet)
+
+        // Check for tiebreak
+        if (playerA!!.score == 3 && playerB!!.score == 3 && setTieBreakEnabled) {
+            setTieBreakMode = true
         }
     }
-}
 
-// Funktion zur Überprüfung und Handhabung des Satzgewinns
-fun checkAndHandleSetWin(
-    player: Player,
-    opponent: Player,
-    setsToWin: Int,
-    currentSet: Int
-) {
-    if (player.gamesWon >= 6 && player.gamesWon - opponent.gamesWon >= 2) {
-        player.setsWon += 1
-        player.gamesWon = 0
-        opponent.gamesWon = 0
-
-        if (player.setsWon >= setsToWin) {
-            // Match gewonnen
-            // Hier kannst du Code hinzufügen, um das Match als gewonnen zu kennzeichnen
-        } else if (player.setsWon >= 2 && currentSet >= 3 && setsToWin == 3) {
-            // Setze den Match-Tiebreak ein
-            startMatchTieBreak(player, opponent)
+    private fun awardSetTieBreakPoint(player: Player) {
+        if (player == playerA) {
+            tieBreakScoreA++
         } else {
-            // Set-Tiebreak einleiten
-            if (currentSet >= 1) {
-                startSetTieBreak(player, opponent)
-            }
+            tieBreakScoreB++
+        }
+
+        if (tieBreakScoreA >= 7 && tieBreakScoreA >= tieBreakScoreB + 2) {
+            awardGame(playerA!!)
+            awardSet(playerA!!)
+            setTieBreakMode = false
+            tieBreakScoreA = 0
+            tieBreakScoreB = 0
+        } else if (tieBreakScoreB >= 7 && tieBreakScoreB >= tieBreakScoreA + 2) {
+            awardGame(playerB!!)
+            awardSet(playerB!!)
+            setTieBreakMode = false
+            tieBreakScoreA = 0
+            tieBreakScoreB = 0
         }
     }
-}
 
-// Funktion zum Wechseln des Aufschlägers im Tiebreak
-fun switchServerInTieBreak(
-    currentServer: Player,
-    opponent: Player,
-    tieBreakServeCount: Int
-): Player {
-    return if (tieBreakServeCount % 2 == 0) {
-        currentServer
-    } else {
-        opponent
+    private fun awardMatchTieBreakPoint(player: Player) {
+        if (player == playerA) {
+            tieBreakScoreA++
+        } else {
+            tieBreakScoreB++
+        }
+
+        if (tieBreakScoreA >= 10 && tieBreakScoreA >= tieBreakScoreB + 2) {
+            awardGame(playerA!!)
+            awardSet(playerA!!)
+            matchTieBreakMode = false
+            tieBreakScoreA = 0
+            tieBreakScoreB = 0
+        } else if (tieBreakScoreB >= 10 && tieBreakScoreB >= tieBreakScoreA + 2) {
+            awardGame(playerB!!)
+            awardSet(playerB!!)
+            matchTieBreakMode = false
+            tieBreakScoreA = 0
+            tieBreakScoreB = 0
+        }
     }
-}
 
-// Funktion zur Bearbeitung des Confirm-Buttons
-fun handleConfirmButton(
-    selectedPlayer: Player?,
-    server: Player,
-    opponent: Player,
-    isTiebreak: Boolean,
-    isMatchTiebreak: Boolean,
-    setTieBreak: Boolean,
-    setsToWin: Int,
-    currentSet: Int,
-    tieBreakServeCount: Int,
-    onUpdateServer: (Player) -> Unit,
-    onUpdatePlayerStats: (Player, Player) -> Unit
-) {
-    if (selectedPlayer != null) {
-        addPointToPlayer(
-            selectedPlayer,
-            opponent,
-            selectedPlayer == server,
-            isTiebreak,
-            isMatchTiebreak,
-            setTieBreak,
-            setsToWin,
-            currentSet
-        )
-        val newServer = switchServerInTieBreak(
-            server,
-            opponent,
-            tieBreakServeCount
-        )
-        onUpdateServer(newServer)
-        onUpdatePlayerStats(selectedPlayer, opponent)
+    private fun awardGame(player: Player) {
+        if (player == playerA) {
+            playerA!!.gamesWon++
+            playerA!!.setScores.add(Pair(playerA!!.gamesWon, playerB!!.gamesWon))
+            playerB!!.setScores.add(Pair(playerB!!.gamesWon, playerA!!.gamesWon))
+        } else {
+            playerB!!.gamesWon++
+            playerA!!.setScores.add(Pair(playerA!!.gamesWon, playerB!!.gamesWon))
+            playerB!!.setScores.add(Pair(playerB!!.gamesWon, playerA!!.gamesWon))
+        }
+        playerA!!.score = 0
+        playerB!!.score = 0
+
+        if ((playerA!!.gamesWon >= 6 && playerA!!.gamesWon >= playerB!!.gamesWon + 2) ||
+            (setTieBreakMode && player == playerA && tieBreakScoreA >= 7 && tieBreakScoreA >= tieBreakScoreB + 2) ||
+            (setTieBreakMode && player == playerB && tieBreakScoreB >= 7 && tieBreakScoreB >= tieBreakScoreA + 2)
+        ) {
+            awardSet(player)
+            playerA!!.gamesWon = 0
+            playerB!!.gamesWon = 0
+        }
+
+        if (matchTieBreakEnabled && numberOfSets == 3 && playerA!!.setsWon == 1 && playerB!!.setsWon == 1) {
+            matchTieBreakMode = true
+        } else if (matchTieBreakEnabled && numberOfSets == 5 && playerA!!.setsWon == 2 && playerB!!.setsWon == 2) {
+            matchTieBreakMode = true
+        }
+
+        changeServer()
+    }
+
+    private fun awardSet(player: Player) {
+        if (player == playerA) {
+            playerA!!.setsWon++
+        } else {
+            playerB!!.setsWon++
+        }
+
+        if (numberOfSets == 3 && (playerA!!.setsWon == 2 || playerB!!.setsWon == 2)) {
+            // Match won!
+        } else if (numberOfSets == 5 && (playerA!!.setsWon == 3 || playerB!!.setsWon == 3)) {
+            // Match won!
+        }
+    }
+
+    private fun changeServer() {
+        currentServer = if (currentServer == playerA) playerB else playerA
     }
 }
