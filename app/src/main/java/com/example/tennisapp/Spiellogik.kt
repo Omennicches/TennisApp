@@ -3,7 +3,6 @@ package com.example.tennisapp
 import androidx.navigation.NavController
 
 object Spiellogik {
-
     // Game Rules (set in TennisStartScreen)
     var numberOfSets = 3
     var setTieBreakEnabled = true
@@ -18,27 +17,39 @@ object Spiellogik {
     var matchTieBreakMode = false
 
     fun initializeMatch(navController: NavController) {
-        val playerA = navController.previousBackStackEntry?.savedStateHandle?.get<Player>("playerA")!!
-        val playerB = navController.previousBackStackEntry?.savedStateHandle?.get<Player>("playerB")!!
+        val playerA =
+            navController.previousBackStackEntry?.savedStateHandle?.get<Player>("playerA")!!
+        val playerB =
+            navController.previousBackStackEntry?.savedStateHandle?.get<Player>("playerB")!!
 
         currentServer = initialServer
         playerA.score = 0
         playerB.score = 0
-        playerA.gamesWon = playerA.gamesWon
-        playerB.gamesWon = playerB.gamesWon
-        playerA.setsWon= playerA.setsWon
-        playerB.setsWon = playerB.setsWon
-        playerA.setTieBreakScore = playerA.setTieBreakScore
-        playerB.setTieBreakScore = playerB.setTieBreakScore
-        playerA.matchTieBreakScore = playerA.matchTieBreakScore
-        playerB.matchTieBreakScore = playerB.matchTieBreakScore
+        playerA.gamesWonCurrentSet = 0
+        playerB.gamesWonCurrentSet = 0
+        playerA.currentSetsWon = 0
+        playerB.currentSetsWon = 0
+        playerA.currentTieBreakScore = 0
+        playerB.currentTieBreakScore = 0
+        playerA.currentMatchTieBreakScore = 0
+        playerB.currentMatchTieBreakScore = 0
+        playerA.gamesWon = emptyList()
+        playerB.gamesWon = emptyList()
+        playerA.setsWon = emptyList()
+        playerB.setsWon = emptyList()
+        playerA.setTieBreakScore = emptyList()
+        playerB.setTieBreakScore = emptyList()
+        playerA.matchTieBreakScore = emptyList()
+        playerB.matchTieBreakScore = emptyList()
         setTieBreakMode = false
         matchTieBreakMode = false
     }
 
     fun awardPoint(player: Player, navController: NavController) {
-        val playerA = navController.previousBackStackEntry?.savedStateHandle?.get<Player>("playerA")!!
-        val playerB = navController.previousBackStackEntry?.savedStateHandle?.get<Player>("playerB")!!
+        val playerA =
+            navController.previousBackStackEntry?.savedStateHandle?.get<Player>("playerA")!!
+        val playerB =
+            navController.previousBackStackEntry?.savedStateHandle?.get<Player>("playerB")!!
 
         if (matchTieBreakMode) {
             awardMatchTieBreakPoint(player, playerA, playerB)
@@ -48,7 +59,6 @@ object Spiellogik {
             awardGamePoint(player, playerA, playerB)
         }
 
-        // Update the saved state handle with the modified players
         navController.previousBackStackEntry?.savedStateHandle?.set("playerA", playerA)
         navController.previousBackStackEntry?.savedStateHandle?.set("playerB", playerB)
     }
@@ -56,25 +66,29 @@ object Spiellogik {
     private fun awardGamePoint(player: Player, playerA: Player, playerB: Player) {
         if (player == playerA) {
             playerA.score++
-            when {
-                playerA.score == 4 && playerB.score < 3 -> awardGame(playerA, playerA, playerB)
-                playerA.score == 4 && playerB.score == 3 -> { /* Advantage Player A */ }
-                playerA.score == 5 && playerB.score == 3 -> awardGame(playerA, playerA, playerB)
-                playerA.score == 4 && playerB.score == 4 -> {
-                    playerA.score = 3
-                    playerB.score = 3
-                }
-            }
         } else {
             playerB.score++
-            when {
-                playerB.score == 4 && playerA.score < 3 -> awardGame(playerB, playerA, playerB)
-                playerB.score == 4 && playerA.score == 3 -> { /* Advantage Player B */ }
-                playerB.score == 5 && playerA.score == 3 -> awardGame(playerB, playerA, playerB)
-                playerB.score == 4 && playerA.score == 4 -> {
-                    playerA.score = 3
-                    playerB.score = 3
-                }
+        }
+
+        when {
+            playerA.score == 4 && playerB.score < 3 -> awardGame(playerA, playerA, playerB)
+            playerA.score == 4 && playerB.score == 3 -> { /* Advantage Player A */
+            }
+
+            playerA.score == 5 && playerB.score == 3 -> awardGame(playerA, playerA, playerB)
+            playerA.score == 4 && playerB.score == 4 -> {
+                playerA.score = 3
+                playerB.score = 3
+            }
+
+            playerB.score == 4 && playerA.score < 3 -> awardGame(playerB, playerA, playerB)
+            playerB.score == 4 && playerA.score == 3 -> { /* Advantage Player B */
+            }
+
+            playerB.score == 5 && playerA.score == 3 -> awardGame(playerB, playerA, playerB)
+            playerB.score == 4 && playerA.score == 4 -> {
+                playerA.score = 3
+                playerB.score = 3
             }
         }
 
@@ -85,78 +99,106 @@ object Spiellogik {
 
     private fun awardSetTieBreakPoint(player: Player, playerA: Player, playerB: Player) {
         if (player == playerA) {
-            playerA.setTieBreakScore
+            playerA.currentTieBreakScore++
         } else {
-            playerB.setTieBreakScore
+            playerB.currentTieBreakScore++
         }
 
-        if (playerA.setTieBreakScore >= 7 && playerA.setTieBreakScore >= playerB.setTieBreakScore + 2) {
+        if (playerA.currentTieBreakScore >= 7 && playerA.currentTieBreakScore >= playerB.currentTieBreakScore + 2) {
             awardGame(playerA, playerA, playerB)
             awardSet(playerA, playerA, playerB)
             setTieBreakMode = false
-            playerA.setTieBreakScore = 0
-            playerB.setTieBreakScore = 0
-        } else if (playerB.setTieBreakScore >= 7 && playerB.setTieBreakScore >= playerA.setTieBreakScore + 2) {
+            playerA.setTieBreakScore = playerA.setTieBreakScore + playerA.currentTieBreakScore
+            playerB.setTieBreakScore = playerB.setTieBreakScore + playerB.currentTieBreakScore
+            playerA.currentTieBreakScore = 0
+            playerB.currentTieBreakScore = 0
+        } else if (playerB.currentTieBreakScore >= 7 && playerB.currentTieBreakScore >= playerA.currentTieBreakScore + 2) {
             awardGame(playerB, playerA, playerB)
             awardSet(playerB, playerA, playerB)
             setTieBreakMode = false
-            playerA.setTieBreakScore = 0
-            playerB.setTieBreakScore = 0
+            playerA.setTieBreakScore = playerA.setTieBreakScore + playerA.currentTieBreakScore
+            playerB.setTieBreakScore = playerB.setTieBreakScore + playerB.currentTieBreakScore
+            playerA.currentTieBreakScore = 0
+            playerB.currentTieBreakScore = 0
         }
     }
 
     private fun awardMatchTieBreakPoint(player: Player, playerA: Player, playerB: Player) {
         if (player == playerA) {
-            playerA.matchTieBreakScore++
+            playerA.currentMatchTieBreakScore++
         } else {
-            playerB.matchTieBreakScore++
+            playerB.currentMatchTieBreakScore++
         }
 
-        if (playerA.matchTieBreakScore >= 10 && playerA.matchTieBreakScore >= playerB.matchTieBreakScore + 2) {
+        if (playerA.currentMatchTieBreakScore >= 10 && playerA.currentMatchTieBreakScore >= playerB.currentMatchTieBreakScore + 2) {
             awardGame(playerA, playerA, playerB)
             awardSet(playerA, playerA, playerB)
             matchTieBreakMode = false
-            playerA.matchTieBreakScore = 0
-            playerB.matchTieBreakScore = 0
-        } else if (playerB.matchTieBreakScore >= 10 && playerB.matchTieBreakScore >= playerA.matchTieBreakScore + 2) {
+            playerA.matchTieBreakScore =
+                playerA.matchTieBreakScore + playerA.currentMatchTieBreakScore
+            playerB.matchTieBreakScore =
+                playerB.matchTieBreakScore + playerB.currentMatchTieBreakScore
+            playerA.currentMatchTieBreakScore = 0
+            playerB.currentMatchTieBreakScore = 0
+        } else if (playerB.currentMatchTieBreakScore >= 10 && playerB.currentMatchTieBreakScore >= playerA.currentMatchTieBreakScore + 2) {
             awardGame(playerB, playerA, playerB)
             awardSet(playerB, playerA, playerB)
             matchTieBreakMode = false
-            playerA.matchTieBreakScore = 0
-            playerB.matchTieBreakScore = 0
+            playerA.matchTieBreakScore =
+                playerA.matchTieBreakScore + playerA.currentMatchTieBreakScore
+            playerB.matchTieBreakScore =
+                playerB.matchTieBreakScore + playerB.currentMatchTieBreakScore
+            playerA.currentMatchTieBreakScore = 0
+            playerB.currentMatchTieBreakScore = 0
         }
     }
 
     private fun awardGame(player: Player, playerA: Player, playerB: Player) {
         if (player == playerA) {
-            playerA.gamesWon++
+            playerA.gamesWonCurrentSet++
         } else {
-            playerB.gamesWon++
+            playerB.gamesWonCurrentSet++
         }
 
-        if ((playerA.gamesWon >= 6 && playerA.gamesWon >= playerB.gamesWon + 2) ||
-            (setTieBreakMode && player == playerA && playerA.setTieBreakScore >= 7 && playerA.setTieBreakScore >= playerB.setTieBreakScore + 2) ||
-            (setTieBreakMode && player == playerB && playerB.setTieBreakScore >= 7 && playerB.setTieBreakScore >= playerA.setTieBreakScore + 2)
+        if ((playerA.gamesWonCurrentSet >= 6 && playerA.gamesWonCurrentSet >= playerB.gamesWonCurrentSet + 2) ||
+            (setTieBreakMode && player == playerA && playerA.currentTieBreakScore >= 7 && playerA.currentTieBreakScore >= playerB.currentTieBreakScore + 2) ||
+            (setTieBreakMode && player == playerB && playerB.currentTieBreakScore >= 7 && playerB.currentTieBreakScore >= playerA.currentTieBreakScore + 2)
         ) {
             awardSet(player, playerA, playerB)
-            playerA.gamesWon = 0
-            playerB.gamesWon = 0
         }
 
-        if (matchTieBreakEnabled && numberOfSets == 3 && playerA.setsWon == 1 && playerB.setsWon == 1) {
+        if (matchTieBreakEnabled && numberOfSets == 3 && playerA.currentSetsWon == 1 && playerB.currentSetsWon == 1) {
             matchTieBreakMode = true
-        } else if (matchTieBreakEnabled && numberOfSets == 5 && playerA.setsWon == 2 && playerB.setsWon == 2) {
+        } else if (matchTieBreakEnabled && numberOfSets == 5 && playerA.currentSetsWon == 2 && playerB.currentSetsWon == 2) {
             matchTieBreakMode = true
         }
+
+        playerA.score = 0
+        playerB.score = 0
 
         changeServer(playerA, playerB)
     }
 
     private fun awardSet(player: Player, playerA: Player, playerB: Player) {
         if (player == playerA) {
-            playerA.setsWon
+            playerA.currentSetsWon++
         } else {
-            playerB.setsWon
+            playerB.currentSetsWon++
+        }
+
+        playerA.gamesWon = playerA.gamesWon + playerA.gamesWonCurrentSet
+        playerB.gamesWon = playerB.gamesWon + playerB.gamesWonCurrentSet
+        playerA.gamesWonCurrentSet = 0
+        playerB.gamesWonCurrentSet = 0
+
+        if ((playerA.currentSetsWon >= (numberOfSets / 2) + 1) ||
+            (playerB.currentSetsWon >= (numberOfSets / 2) + 1)
+        ) {
+            // Match finished
+            playerA.setsWon = playerA.setsWon + playerA.currentSetsWon
+            playerB.setsWon = playerB.setsWon + playerB.currentSetsWon
+            playerA.currentSetsWon =0
+            playerB.currentSetsWon = 0
         }
     }
 

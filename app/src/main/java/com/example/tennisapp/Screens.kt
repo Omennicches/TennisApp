@@ -92,16 +92,26 @@ fun TennisStartScreen(navController: NavController) {
                 val playerA = Player(
                     name = playerOneName.text,
                     score = 0,
-                    gamesWon = List(numberOfSets) { 0 }, // Initialize with zeros for each set
-                    setsWon = List(numberOfSets) { 0 },  // Initialize with zeros for each set
-                    setTieBreakScore = List(numberOfSets) { 0 } // Initialize with zeros for each set
+                    gamesWonCurrentSet = 0,
+                    gamesWon = emptyList(),
+                    currentSetsWon = 0,
+                    setsWon = emptyList(),
+                    currentTieBreakScore = 0,
+                    setTieBreakScore = emptyList(),
+                    currentMatchTieBreakScore = 0,
+                    matchTieBreakScore = emptyList()
                 )
                 val playerB = Player(
                     name = playerTwoName.text,
                     score = 0,
-                    gamesWon = List(numberOfSets) { 0 }, // Initialize with zeros for each set
-                    setsWon = List(numberOfSets) { 0 },  // Initialize with zeros for each set
-                    setTieBreakScore = List(numberOfSets) { 0 } // Initialize with zeros for each set
+                    gamesWonCurrentSet = 0,
+                    gamesWon = emptyList(),
+                    currentSetsWon = 0,
+                    setsWon = emptyList(),
+                    currentTieBreakScore = 0,
+                    setTieBreakScore = emptyList(),
+                    currentMatchTieBreakScore = 0,
+                    matchTieBreakScore = emptyList()
                 )
 
 
